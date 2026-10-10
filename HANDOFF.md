@@ -37,6 +37,9 @@ Speedtest の別マシン実機セットアップ検証で得られた知見を�
    - Zabbix にはテンプレート内アイテム名・トリガー名・グラフ名の動的多言語翻訳機能が存在しない（Web UI の言語に関わらずオブジェクト名は単一固定文字列）。
    - そのため、公式提出用の英語版（`_en.yaml`）と日本語版（`_ja.yaml`）を**最初から 2 本立てで作成・提供**すること。
    - インポートスクリプトやセットアップスクリプトには `-Language`（`Auto` / `JA` / `EN`）引数および OS 言語（`Get-Culture` / `$LANG`）の自動判定を最初から組み込んでおくこと。
+5. **Windows タスクスケジューラ登録時の PowerShell 絶対パス解決 (0x80070002 起動失敗防止)**:
+   - Microsoft Store / WindowsApps 経由の PowerShell 7 やバックグラウンドの非対話実行コンテキストでは、相対名 `pwsh.exe` やユーザー PATH が解決できず、エラー `0x80070002`（指定されたファイルが見つかりません）でタスク起動が失敗する。
+   - スケジューラ登録スクリプト（`setup.ps1`）では、必ず Windows 標準の `"$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"`、または正規インストール（Program Files等）された `pwsh.exe` の**完全な絶対パス**を解決して登録すること。
 
 ---
 
