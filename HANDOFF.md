@@ -33,6 +33,10 @@ Speedtest の別マシン実機セットアップ検証で得られた知見を�
    - **グラフ描画タイプ**: 必ず `SINGLE_LINE` を使用すること（`LINE` は Zabbix 7.0 で `unexpected constant` エラーになる）。
    - **API パラメータ名**: `configuration.import` の `rules` は、キャメルケースの `templateDashboards` を使用すること（`template_dashboards` はエラー）。
    - **テンプレート技術名のプレフィックス**: ホスト名との重複衝突（`Host with host name "xxx" already exists`）を回避するため、`template: template_ntp_accuracy`, `template: template_chrony_accuracy` のように必ず `template_` プレフィックスを付与すること。
+4. **Zabbix 多言語仕様への配慮（最初から日英両テンプレートを分離提供）**:
+   - Zabbix にはテンプレート内アイテム名・トリガー名・グラフ名の動的多言語翻訳機能が存在しない（Web UI の言語に関わらずオブジェクト名は単一固定文字列）。
+   - そのため、公式提出用の英語版（`_en.yaml`）と日本語版（`_ja.yaml`）を**最初から 2 本立てで作成・提供**すること。
+   - インポートスクリプトやセットアップスクリプトには `-Language`（`Auto` / `JA` / `EN`）引数および OS 言語（`Get-Culture` / `$LANG`）の自動判定を最初から組み込んでおくこと。
 
 ---
 
