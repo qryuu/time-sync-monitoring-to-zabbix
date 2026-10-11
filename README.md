@@ -10,7 +10,7 @@
 </div>
 
 Zabbix 7.0 / 6.0 LTS 対応の高精度時刻同期監視テンプレートスイートです。  
-NTP（ntpd）、Chrony、およびリモートNTPアプライアンス（Agentless / External check）の時刻精度・同期品質を包括的に可視化・監視します。（※将来のPTP拡張にも対応予定）
+NTP（ntpd）、Chrony、PTP（linuxptp / IEEE 1588）、およびリモートNTPアプライアンス（Agentless / External check）の時刻精度・同期品質を包括的に可視化・監視します。
 
 > [!TIP]
 > **🤖 AI コーディングアシスタントをご利用の場合 (AI-setup-ready)**:  
@@ -21,18 +21,21 @@ NTP（ntpd）、Chrony、およびリモートNTPアプライアンス（Agentle
 ## 主な特徴
 
 1. **マスターアイテム化による負荷 1/8 削減**:
-   - `ntpq` や `chronyc` の実行を 1 つのマスターアイテムに集約。
+   - `ntpq`、`chronyc`、`pmc` の実行を 1 つのマスターアイテムに集約。
    - 監視対象およびエージェントのプロセス・ネットワーク負荷を劇的に削減し、全メトリクスを完全同一瞬間の値（アトミック性）として記録。
 2. **LLD（ローレベルディスカバリ）による全同期サーバー自動監視（Chrony & NTP 双方対応）**:
    - 現在アクティブな同期先（マスター）だけでなく、設定されている予備サーバー・全ピア（スタンバイ候補、外れ値、不良サーバー）を自動検出。
    - サーバーごとの遅延（Delay）、オフセット、ジッター（Jitter）、到達性（Reachability）、同期役割（Sync Status）を個別追跡し、予備サーバーのサイレントダウンを早期検知。
-3. **Grafana風モダンSVG集約ダッシュボード**:
+3. **PTP (IEEE 1588 / linuxptp) マイクロ秒・ナノ秒高精度監視**:
+   - `linuxptp` (`ptp4l`, `phc2sys`, `pmc`) に完全対応。
+   - マスターオフセット (ns)、平均経路遅延 (ns)、グランドマスター検知状態、ポート状態（SLAVE/MASTER）、プロセス稼働を包括監視。
+4. **Grafana風モダンSVG集約ダッシュボード**:
    - Zabbix 7.0 標準の `type: svggraph` と `type: item`（カード型単一値）を採用。
    - クライアントのシステム時刻オフセット推移（半透明グラデーション塗りつぶし）と、全同期サーバーの遅延オーバーレイ比較を一画面で可視化。
-4. **エージェント不要の外部チェック（Agentless / External check）対応**:
+5. **エージェント不要の外部チェック（Agentless / External check）対応**:
    - Python標準ライブラリのみで動作する高精度NTP測定スクリプト `ntp/scripts/zabbix_ntp_check.py` を同梱。
    - アプライアンスやネットワークスイッチなど、Zabbix Agentを導入できない機器も直接監視可能。
-5. **最初から日英バイリンガル対応（`_ja.yaml` / `_en.yaml`）**:
+6. **最初から日英バイリンガル対応（`_ja.yaml` / `_en.yaml`）**:
    - インポートスクリプト（PowerShell / Python）がOS言語を自動判別して適切なテンプレートを展開。
 
 ---
@@ -42,17 +45,22 @@ NTP（ntpd）、Chrony、およびリモートNTPアプライアンス（Agentle
 ```text
 time-sync-monitoring-to-zabbix/
 ├── chrony/
+│   ├── README.md                             # Chrony 監視仕様
 │   └── templates/
 │       ├── template_chrony_accuracy_ja.yaml  # 日本語版テンプレート
 │       └── template_chrony_accuracy_en.yaml  # 英語版テンプレート
 ├── ntp/
+│   ├── README.md                             # NTP 監視仕様
 │   ├── templates/
 │   │   ├── template_ntp_accuracy_ja.yaml     # 日本語版テンプレート（ローカル＆リモート）
 │   │   └── template_ntp_accuracy_en.yaml     # 英語版テンプレート
 │   └── scripts/
 │       └── zabbix_ntp_check.py               # 外部チェック用スクリプト
 ├── ptp/
-│   └── README.md                             # PTP (IEEE 1588) 拡張ロードマップ
+│   ├── README.md                             # PTP (IEEE 1588) 監視仕様
+│   └── templates/
+│       ├── template_ptp_accuracy_ja.yaml     # 日本語版テンプレート (linuxptp)
+│       └── template_ptp_accuracy_en.yaml     # 英語版テンプレート (linuxptp)
 ├── scripts/
 │   ├── import_template.ps1                   # Zabbix APIインポート（PowerShell）
 │   └── import_template.py                    # Zabbix APIインポート（Python）
