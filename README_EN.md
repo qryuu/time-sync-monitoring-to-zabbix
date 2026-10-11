@@ -111,6 +111,8 @@ sudo systemctl restart zabbix-agent # or zabbix-agent2
 
 ## Monitored Metrics
 
+### 1. NTP & Chrony Metrics (Sub-millisecond Level)
+
 | Metric | Description | Collection Method |
 | :--- | :--- | :--- |
 | **System time offset** | Current clock offset relative to active reference peer (ms) | Master / Dependent item |
@@ -120,6 +122,20 @@ sudo systemctl restart zabbix-agent # or zabbix-agent2
 | **Leap status** | Leap second warning status and synchronization state | Master / Dependent item |
 | **Source Reachability** | 8-bit octal reach register indicating poll replies over last 8 attempts | LLD / Dependent item |
 | **Source Delay / Offset** | Per-peer estimated round-trip delay and time offset | LLD / Dependent item |
+
+### 2. PTP (IEEE 1588 / linuxptp) Metrics (Nanosecond Level)
+
+| Metric | Item Key | Unit | Collection Method | Description |
+| :--- | :--- | :---: | :---: | :--- |
+| **PTP Master Offset** | `ptp.offset_from_master` | ns | Master / Dependent item | Time deviation from grandmaster clock (with threshold triggers) |
+| **PTP Mean Path Delay** | `ptp.mean_path_delay` | ns | Master / Dependent item | One-way mean round-trip path latency between master and slave |
+| **Grandmaster Presence** | `ptp.gm_present` | - | Master / Dependent item | Grandmaster detection state (`true`/`false`, alert on missing) |
+| **PTP Port State** | `ptp.port_state` | - | Master / Dependent item | Port synchronization status (`SLAVE`, `MASTER`, `PASSIVE`, `FAULTY`, etc.) |
+| **Grandmaster Identity** | `ptp.gm_identity` | - | Master / Dependent item | EUI-64 unique clock identifier of active grandmaster |
+| **Steps Removed** | `ptp.steps_removed` | - | Master / Dependent item | Boundary clock hop count from grandmaster (`0` for direct) |
+| **Port Identity** | `ptp.port_identity` | - | Master / Dependent item | Local PTP port identifier |
+| **ptp4l Process Count** | `proc.num[ptp4l]` | - | Zabbix Agent (Active) | Daemon health monitoring for `ptp4l` (alert on `0`) |
+| **phc2sys Process Count** | `proc.num[phc2sys]` | - | Zabbix Agent (Active) | Daemon health monitoring for `phc2sys` (alert on `0`) |
 
 ---
 

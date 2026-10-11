@@ -110,6 +110,8 @@ sudo systemctl restart zabbix-agent # または zabbix-agent2
 
 ## 収集メトリクス一覧
 
+### 1. NTP & Chrony 監視メトリクス (ミリ秒単位)
+
 | メトリクス名 | 説明 | 収集方式 |
 | :--- | :--- | :--- |
 | **System time offset** | システムクロックとNTPマスター間の時刻ズレ（ms） | マスター / 依存アイテム |
@@ -119,6 +121,20 @@ sudo systemctl restart zabbix-agent # または zabbix-agent2
 | **Leap status** | 閏秒挿入/削除および同期状態 | マスター / 依存アイテム |
 | **NTP source Reachability** | 各同期先サーバーの到達性レジスタ値（過去8回） | LLD / 依存アイテム |
 | **NTP source Delay / Offset** | 各同期先サーバー個別の推定遅延およびオフセット | LLD / 依存アイテム |
+
+### 2. PTP (IEEE 1588 / linuxptp) 監視メトリクス (ナノ秒単位)
+
+| メトリクス名 | アイテムキー | 単位 | 収集方式 | 説明 |
+| :--- | :--- | :---: | :---: | :--- |
+| **PTP マスターオフセット** | `ptp.offset_from_master` | ns | マスター / 依存アイテム | グランドマスター（GM）との時刻偏差（閾値アラート付き） |
+| **PTP 平均経路遅延** | `ptp.mean_path_delay` | ns | マスター / 依存アイテム | マスター/スレーブ間の平均ネットワーク往復遅延の片道分 |
+| **GM 検知状態** | `ptp.gm_present` | - | マスター / 依存アイテム | グランドマスターの存在検知状態（`true`/`false`） |
+| **PTP ポート状態** | `ptp.port_state` | - | マスター / 依存アイテム | ポート動作ステータス（`SLAVE`, `MASTER`, `PASSIVE`, `FAULTY` 等） |
+| **グランドマスター ID** | `ptp.gm_identity` | - | マスター / 依存アイテム | 同期中グランドマスターのクロック識別子（EUI-64） |
+| **ステップ数 (ホップ数)** | `ptp.steps_removed` | - | マスター / 依存アイテム | グランドマスターからのバウンダリクロック段数 |
+| **ポート識別子** | `ptp.port_identity` | - | マスター / 依存アイテム | ローカル PTP ポートの識別子 |
+| **ptp4l プロセス稼働数** | `proc.num[ptp4l]` | - | Zabbix Agent (Active) | `ptp4l` デーモンの死活監視（プロセス数 `0` でアラート） |
+| **phc2sys プロセス稼働数** | `proc.num[phc2sys]` | - | Zabbix Agent (Active) | `phc2sys` デーモンの死活監視（プロセス数 `0` でアラート） |
 
 ---
 
