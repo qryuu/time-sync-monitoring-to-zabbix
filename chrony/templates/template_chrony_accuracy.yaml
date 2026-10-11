@@ -1,14 +1,14 @@
 zabbix_export:
-  version: '6.0'
+  version: '7.0'
   date: '2021-11-21T21:39:42Z'
-  groups:
+  template_groups:
     -
       uuid: e5be8e009c61477ca38b16ae08352a19
-      name: 自宅ラックテンプレート
+      name: Templates/Applications
   templates:
     -
       uuid: de2422c2cc1c4b91804570548a4f3e81
-      template: chrony_Monitoring-Japanese
+      template: template_chrony_accuracy
       name: chronyテンプレート
       description: |
         ## Overview
@@ -27,6 +27,7 @@ zabbix_export:
         
         
         EnableRemoteCommands=1  
+        AllowKey=system.run[*]  # For Zabbix Agent 5.0+
         UnsafeUserParameters=1
         
         
@@ -42,9 +43,9 @@ zabbix_export:
         
         
         
-      groups:
+      template_groups:
         -
-          name: 自宅ラックテンプレート
+          name: Templates/Applications
       items:
         -
           uuid: ea13fc3c867c403395f31620546d2702
@@ -79,23 +80,23 @@ zabbix_export:
             -
               uuid: c02f379b59934e0b84e7f3ffa3229894
               expression: |
-                last(/chrony_Monitoring-Japanese/Lastoffset)>{$NTP_OFFSET_LARGE} or 
-                last(/chrony_Monitoring-Japanese/Lastoffset)<-{$NTP_OFFSET_LARGE}
+                last(/template_chrony_accuracy/Lastoffset)>{$NTP_OFFSET_LARGE} or 
+                last(/template_chrony_accuracy/Lastoffset)<-{$NTP_OFFSET_LARGE}
               name: '上位NTPとのずれが{$NTP_OFFSET_LARGE}msを超えました'
               priority: WARNING
             -
               uuid: 141babfa4ebe4534a7c9160257af8084
               expression: |
-                last(/chrony_Monitoring-Japanese/Lastoffset)>{$NTP_OFFSET_SMALL} or 
-                last(/chrony_Monitoring-Japanese/Lastoffset)<-{$NTP_OFFSET_SMALL}
+                last(/template_chrony_accuracy/Lastoffset)>{$NTP_OFFSET_SMALL} or 
+                last(/template_chrony_accuracy/Lastoffset)<-{$NTP_OFFSET_SMALL}
               name: '上位NTPとのずれが{$NTP_OFFSET_SMALL}msを超えました'
               priority: INFO
               dependencies:
                 -
                   name: '上位NTPとのずれが{$NTP_OFFSET_LARGE}msを超えました'
                   expression: |
-                    last(/chrony_Monitoring-Japanese/Lastoffset)>{$NTP_OFFSET_LARGE} or 
-                    last(/chrony_Monitoring-Japanese/Lastoffset)<-{$NTP_OFFSET_LARGE}
+                    last(/template_chrony_accuracy/Lastoffset)>{$NTP_OFFSET_LARGE} or 
+                    last(/template_chrony_accuracy/Lastoffset)<-{$NTP_OFFSET_LARGE}
         -
           uuid: fdccce2395204f3dbd8f87830e5f549c
           name: 同期状態
@@ -125,7 +126,7 @@ zabbix_export:
           triggers:
             -
               uuid: ea9e9045dca34aab9c91fe4772c13931
-              expression: 'find(/chrony_Monitoring-Japanese/LeapStatus,,"regexp","Not synchronized")<>0'
+              expression: 'find(/template_chrony_accuracy/LeapStatus,,"regexp","Not synchronized")<>0'
               name: NTPサーバーと同期していません。
               priority: WARNING
               type: MULTIPLE
@@ -384,19 +385,19 @@ zabbix_export:
           drawtype: BOLD_LINE
           color: 1A7C11
           item:
-            host: chrony_Monitoring-Japanese
+            host: template_chrony_accuracy
             key: Lastoffset
         -
           sortorder: '1'
           drawtype: BOLD_LINE
           color: F63100
           item:
-            host: chrony_Monitoring-Japanese
+            host: template_chrony_accuracy
             key: RMSoffset
         -
           sortorder: '2'
           drawtype: BOLD_LINE
           color: 2774A4
           item:
-            host: chrony_Monitoring-Japanese
+            host: template_chrony_accuracy
             key: Systemtime_ms

@@ -1,14 +1,14 @@
 zabbix_export:
-  version: '6.0'
+  version: '7.0'
   date: '2021-11-21T21:17:22Z'
-  groups:
+  template_groups:
     -
       uuid: e5be8e009c61477ca38b16ae08352a19
-      name: 自宅ラックテンプレート
+      name: Templates/Applications
   templates:
     -
       uuid: 024ab0f7fd4240ada2de6a143173c6a3
-      template: NTP-remote-Japanese
+      template: template_ntp_remote_accuracy
       name: NTPテンプレート（リモート）
       description: |
         ## Overview
@@ -24,6 +24,7 @@ zabbix_export:
         
         
         EnableRemoteCommands=1  
+        AllowKey=system.run[*]  # For Zabbix Agent 5.0+
         UnsafeUserParameters=1
         
         
@@ -50,9 +51,9 @@ zabbix_export:
         
         
         
-      groups:
+      template_groups:
         -
-          name: 自宅ラックテンプレート
+          name: Templates/Applications
       items:
         -
           uuid: fecfe76f83874f26ba0633c24b4cbcfb
@@ -99,7 +100,7 @@ zabbix_export:
           triggers:
             -
               uuid: c87d163a486748bbbb41141652e002f0
-              expression: '(last(/NTP-remote-Japanese/system.run[ntpq -p {$NTP_IP}|grep \* |awk ''{print$1}''|sed s/*//],#1)<>last(/NTP-remote-Japanese/system.run[ntpq -p {$NTP_IP}|grep \* |awk ''{print$1}''|sed s/*//],#2))=1'
+              expression: '(last(/template_ntp_remote_accuracy/system.run[ntpq -p {$NTP_IP}|grep \* |awk ''{print$1}''|sed s/*//],#1)<>last(/template_ntp_remote_accuracy/system.run[ntpq -p {$NTP_IP}|grep \* |awk ''{print$1}''|sed s/*//],#2))=1'
               name: '同期しているNTPサーバが変更されました。({$NTP_IP})'
               status: DISABLED
               priority: INFO
@@ -173,18 +174,18 @@ zabbix_export:
           triggers:
             -
               uuid: 525b0f6f409e45d6ae06d4308ec44a74
-              expression: 'last(/NTP-remote-Japanese/system.run[ntpq -p {$NTP_IP}|grep \* |awk ''{print$9}''])>5000 or last(/NTP-remote-Japanese/system.run[ntpq -p {$NTP_IP}|grep \* |awk ''{print$9}''])<-5000'
+              expression: 'last(/template_ntp_remote_accuracy/system.run[ntpq -p {$NTP_IP}|grep \* |awk ''{print$9}''])>5000 or last(/template_ntp_remote_accuracy/system.run[ntpq -p {$NTP_IP}|grep \* |awk ''{print$9}''])<-5000'
               name: '上位NTPとのずれが5sを超えました({$NTP_IP})'
               priority: AVERAGE
             -
               uuid: 5ba5a0128a6b4738bb0e592f9e8fdcd8
-              expression: 'last(/NTP-remote-Japanese/system.run[ntpq -p {$NTP_IP}|grep \* |awk ''{print$9}''])>50 or last(/NTP-remote-Japanese/system.run[ntpq -p {$NTP_IP}|grep \* |awk ''{print$9}''])<-50'
+              expression: 'last(/template_ntp_remote_accuracy/system.run[ntpq -p {$NTP_IP}|grep \* |awk ''{print$9}''])>50 or last(/template_ntp_remote_accuracy/system.run[ntpq -p {$NTP_IP}|grep \* |awk ''{print$9}''])<-50'
               name: '上位NTPとのずれが50msを超えました({$NTP_IP})'
               priority: WARNING
               dependencies:
                 -
                   name: '上位NTPとのずれが5sを超えました({$NTP_IP})'
-                  expression: 'last(/NTP-remote-Japanese/system.run[ntpq -p {$NTP_IP}|grep \* |awk ''{print$9}''])>5000 or last(/NTP-remote-Japanese/system.run[ntpq -p {$NTP_IP}|grep \* |awk ''{print$9}''])<-5000'
+                  expression: 'last(/template_ntp_remote_accuracy/system.run[ntpq -p {$NTP_IP}|grep \* |awk ''{print$9}''])>5000 or last(/template_ntp_remote_accuracy/system.run[ntpq -p {$NTP_IP}|grep \* |awk ''{print$9}''])<-5000'
         -
           uuid: a152b245776e4017802215d2a4f711ff
           name: 'NTP分散({$NTP_IP})'
@@ -205,7 +206,7 @@ zabbix_export:
           value: 127.0.0.1
     -
       uuid: fdb854ebadd64352a7ffe86ce1a69b98
-      template: NTP_Monitoring-Japanese
+      template: template_ntp_accuracy
       name: NTPテンプレート
       description: |
         ## Overview
@@ -221,6 +222,7 @@ zabbix_export:
         
         
         EnableRemoteCommands=1  
+        AllowKey=system.run[*]  # For Zabbix Agent 5.0+
         UnsafeUserParameters=1
         
         
@@ -259,6 +261,7 @@ zabbix_export:
         
         
         EnableRemoteCommands=1  
+        AllowKey=system.run[*]  # For Zabbix Agent 5.0+
         UnsafeUserParameters=1
         
         
@@ -285,9 +288,9 @@ zabbix_export:
         
         
         
-      groups:
+      template_groups:
         -
-          name: 自宅ラックテンプレート
+          name: Templates/Applications
       items:
         -
           uuid: 2a299cc8eb38459e95a1bbd18a53cd2a
@@ -355,7 +358,7 @@ zabbix_export:
           triggers:
             -
               uuid: 022559e910b44edd9dacd44c3dda93e0
-              expression: '(last(/NTP_Monitoring-Japanese/system.run[ntpq -p|grep \* |awk ''{print$1}''|sed s/*//],#1)<>last(/NTP_Monitoring-Japanese/system.run[ntpq -p|grep \* |awk ''{print$1}''|sed s/*//],#2))=1'
+              expression: '(last(/template_ntp_accuracy/system.run[ntpq -p|grep \* |awk ''{print$1}''|sed s/*//],#1)<>last(/template_ntp_accuracy/system.run[ntpq -p|grep \* |awk ''{print$1}''|sed s/*//],#2))=1'
               name: 同期しているNTPサーバが変更されました。
               status: DISABLED
               priority: INFO
@@ -429,18 +432,18 @@ zabbix_export:
           triggers:
             -
               uuid: 108bffb5f94a4cd8813be81a5c689f2b
-              expression: 'last(/NTP_Monitoring-Japanese/system.run[ntpq -p|grep \* |awk ''{print$9}''])>5000 or last(/NTP_Monitoring-Japanese/system.run[ntpq -p|grep \* |awk ''{print$9}''])<-5000'
+              expression: 'last(/template_ntp_accuracy/system.run[ntpq -p|grep \* |awk ''{print$9}''])>5000 or last(/template_ntp_accuracy/system.run[ntpq -p|grep \* |awk ''{print$9}''])<-5000'
               name: 上位NTPとのずれが5sを超えました
               priority: AVERAGE
             -
               uuid: d81f18defa9044fda98bfc209fde8280
-              expression: 'last(/NTP_Monitoring-Japanese/system.run[ntpq -p|grep \* |awk ''{print$9}''])>50 or last(/NTP_Monitoring-Japanese/system.run[ntpq -p|grep \* |awk ''{print$9}''])<-50'
+              expression: 'last(/template_ntp_accuracy/system.run[ntpq -p|grep \* |awk ''{print$9}''])>50 or last(/template_ntp_accuracy/system.run[ntpq -p|grep \* |awk ''{print$9}''])<-50'
               name: 上位NTPとのずれが50msを超えました
               priority: WARNING
               dependencies:
                 -
                   name: 上位NTPとのずれが5sを超えました
-                  expression: 'last(/NTP_Monitoring-Japanese/system.run[ntpq -p|grep \* |awk ''{print$9}''])>5000 or last(/NTP_Monitoring-Japanese/system.run[ntpq -p|grep \* |awk ''{print$9}''])<-5000'
+                  expression: 'last(/template_ntp_accuracy/system.run[ntpq -p|grep \* |awk ''{print$9}''])>5000 or last(/template_ntp_accuracy/system.run[ntpq -p|grep \* |awk ''{print$9}''])<-5000'
         -
           uuid: 22a0f923b6a64f47aead6b0655c9f2ce
           name: NTP分散
@@ -463,20 +466,20 @@ zabbix_export:
         -
           color: C80000
           item:
-            host: NTP_Monitoring-Japanese
+            host: template_ntp_accuracy
             key: 'system.run[ntpq -p|grep \* |awk ''{print$9}'']'
         -
           sortorder: '1'
           color: 00C800
           item:
-            host: NTP_Monitoring-Japanese
+            host: template_ntp_accuracy
             key: 'system.run[ntpq -p|grep \* |awk ''{print$10}'']'
         -
           sortorder: '2'
           color: 0000C8
           yaxisside: RIGHT
           item:
-            host: NTP_Monitoring-Japanese
+            host: template_ntp_accuracy
             key: 'system.run[ntpq -p|grep \* |awk ''{print$8}'']'
     -
       uuid: 5c13b088b0184a1aab212a9a1f01fe19
@@ -485,18 +488,18 @@ zabbix_export:
         -
           color: C80000
           item:
-            host: NTP-remote-Japanese
+            host: template_ntp_remote_accuracy
             key: 'system.run[ntpq -p {$NTP_IP}|grep \* |awk ''{print$9}'']'
         -
           sortorder: '1'
           color: 00C800
           item:
-            host: NTP-remote-Japanese
+            host: template_ntp_remote_accuracy
             key: 'system.run[ntpq -p {$NTP_IP}|grep \* |awk ''{print$10}'']'
         -
           sortorder: '2'
           color: 0000C8
           yaxisside: RIGHT
           item:
-            host: NTP-remote-Japanese
+            host: template_ntp_remote_accuracy
             key: 'system.run[ntpq -p {$NTP_IP}|grep \* |awk ''{print$8}'']'
