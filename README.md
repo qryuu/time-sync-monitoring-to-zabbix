@@ -79,14 +79,24 @@ time-sync-monitoring-to-zabbix/
 python scripts/import_template.py --url "http://zabbix-server/zabbix" --token "<YOUR_API_TOKEN>" --type chrony --host "Web-Server-01"
 ```
 
-※指定したホストが Zabbix 上に存在しない場合は、`host.create` により自動作成されて安全にリンクされます。
+> [!NOTE]
+> - **ホスト名の柔軟な指定**: `--host` / `-HostName` には、Zabbix上の技術名（Host name）または表示名（Visible name）のいずれも指定可能です。
+> - **既存テンプレートの保護（安全マージ）**: 既存ホストを指定した場合、すでにリンクされているOS監視やミドルウェアのテンプレートを解除することなく、本テンプレートを追加マージします。
+> - **新規ホストの自動作成**: 指定したホストが Zabbix 上に存在しない場合は、`host.create` により自動作成されて安全にリンクされます。
 
 ### 2. エージェント側の設定確認
 `zabbix_agentd.conf` または `zabbix_agent2.conf` で以下が有効になっていることを確認してください：
 ```ini
 AllowKey=system.run[*]
 ```
-設定変更後はエージェントサービスを再起動してください。
+設定変更後はエージェントサービスを再起動してください：
+```bash
+sudo systemctl restart zabbix-agent # または zabbix-agent2
+```
+
+> [!TIP]
+> **超高精度環境 & Chrony 4.x に完全対応**:  
+> AWS EC2（Amazon Time Sync Service: `169.254.169.123`）など、ナノ秒（`ns`）やマイクロ秒（`us`）で同期する環境でも自動換算され、正常に記録されます。Chrony 4.x の 14 カラム出力にも完全対応しています。
 
 ---
 

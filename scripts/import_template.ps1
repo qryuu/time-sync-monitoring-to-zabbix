@@ -136,10 +136,20 @@ if ($importResult) {
     Write-Host "[SUCCESS] Template successfully imported!" -ForegroundColor Green
 }
 
-# 5. Link to Host if specified (with automatic host.create)
+# 6. Link to Host if specified (with automatic host.create and safe template merge)
 if ($HostName) {
     Write-Host "[INFO] Checking host '$HostName'..." -ForegroundColor Cyan
-    $hosts = Invoke-ZabbixApi -Method "host.get" -Params @{ filter = @{ host = @($HostName) } }
+    # Search by technical host name first, then by visible display name
+    $hosts = Invoke-ZabbixApi -Method "host.get" -Params @{
+        filter = @{ host = @($HostName) }
+        selectParentTemplates = @("templateid")
+    }
+    if (-not $hosts -or $hosts.Count -eq 0) {
+        $hosts = Invoke-ZabbixApi -Method "host.get" -Params @{
+            filter = @{ name = @($HostName) }
+            selectParentTemplates = @("templateid")
+        }
+    }
     
     # Retrieve template ID
     $tmplObj = Invoke-ZabbixApi -Method "template.get" -Params @{ filter = @{ host = @($TemplateTechName) } }
@@ -148,7 +158,7 @@ if ($HostName) {
     }
     $templateId = $tmplObj[0].templateid
 
-    if ($hosts.Count -eq 0) {
+    if (-not $hosts -or $hosts.Count -eq 0) {
         Write-Host "[INFO] Host '$HostName' does not exist. Creating new host (host.create)..." -ForegroundColor Yellow
         # Find default hostgroup Linux servers or Discovered hosts
         $groupObj = Invoke-ZabbixApi -Method "hostgroup.get" -Params @{ filter = @{ name = @("Linux servers", "Discovered hosts", "Templates/Applications") } }
@@ -169,12 +179,34 @@ if ($HostName) {
         }
         Write-Host "[SUCCESS] Host '$HostName' created and linked to template!" -ForegroundColor Green
     } else {
-        $hostId = $hosts[0].hostid
-        Write-Host "[INFO] Linking template to existing host '$HostName' (hostid: $hostId)..." -ForegroundColor Cyan
-        Invoke-ZabbixApi -Method "host.update" -Params @{
-            hostid = $hostId
-            templates = @(@{ templateid = $templateId })
+        $targetHost = $hosts[0]
+        $hostId = $targetHost.hostid
+        $displayName = if ($targetHost.name) { $targetHost.name } else { $targetHost.host }
+        Write-Host "[INFO] Linking template to existing host '$displayName' (hostid: $hostId)..." -ForegroundColor Cyan
+
+        # Collect existing parent template IDs to avoid unlinking OS/database templates
+        $existingTmplIds = [System.Collections.Generic.HashSet[string]]::new()
+        if ($targetHost.parentTemplates) {
+            foreach ($pt in $targetHost.parentTemplates) {
+                [void]$existingTmplIds.Add($pt.templateid)
+            }
         }
-        Write-Host "[SUCCESS] Template linked to host '$HostName'!" -ForegroundColor Green
+
+        if ($existingTmplIds.Contains($templateId)) {
+            Write-Host "[INFO] Template '$TemplateTechName' is already linked to host '$displayName'." -ForegroundColor Yellow
+        } else {
+            [void]$existingTmplIds.Add($templateId)
+            $mergedTemplates = @()
+            foreach ($tid in $existingTmplIds) {
+                $mergedTemplates += @{ templateid = $tid }
+            }
+
+            Invoke-ZabbixApi -Method "host.update" -Params @{
+                hostid = $hostId
+                templates = $mergedTemplates
+            }
+            $preservedCount = $existingTmplIds.Count - 1
+            Write-Host "[SUCCESS] Safely linked template to existing host '$displayName' (preserved $preservedCount existing templates)!" -ForegroundColor Green
+        }
     }
 }

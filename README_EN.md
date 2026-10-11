@@ -80,14 +80,24 @@ time-sync-monitoring-to-zabbix/
 python scripts/import_template.py --url "http://zabbix-server/zabbix" --token "<API_TOKEN>" --type chrony --host "App-Server-01"
 ```
 
-*Note: If the specified host does not exist in Zabbix, it is automatically created via `host.create` with default interfaces.*
+> [!NOTE]
+> - **Flexible Host Matching**: `--host` / `-HostName` accepts either technical host names or Zabbix visible display names.
+> - **Safe Template Merging**: When linking to an existing host, existing template links (e.g., OS, database) are fully preserved.
+> - **Automatic Host Creation**: If the target host does not exist, it is created automatically via `host.create`.
 
 ### 2. Zabbix Agent Permissions
 Ensure the following key is permitted in your `zabbix_agentd.conf` or `zabbix_agent2.conf`:
 ```ini
 AllowKey=system.run[*]
 ```
-Restart the Zabbix agent daemon after updating the configuration.
+Restart the Zabbix agent daemon after updating the configuration:
+```bash
+sudo systemctl restart zabbix-agent # or zabbix-agent2
+```
+
+> [!TIP]
+> **Sub-Millisecond & Chrony 4.x Ready**:  
+> High-precision environments like AWS EC2 (Amazon Time Sync: `169.254.169.123`) outputting in nanoseconds (`ns`) or microseconds (`us`) are automatically detected and converted to milliseconds (`ms`). 14-column output format from Chrony 4.x is fully supported out of the box.
 
 ---
 
