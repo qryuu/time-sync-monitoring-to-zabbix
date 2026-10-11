@@ -179,7 +179,7 @@ zabbix_export:
         widgets:
         - type: item
           name: NTP offset (ms)
-          width: '12'
+          width: '24'
           height: '3'
           fields:
           - type: ITEM
@@ -207,8 +207,8 @@ zabbix_export:
             value: '50'
         - type: item
           name: Synchronized peer
-          x: '12'
-          width: '12'
+          x: '24'
+          width: '24'
           height: '3'
           fields:
           - type: ITEM
@@ -222,10 +222,13 @@ zabbix_export:
           - type: INTEGER
             name: show.1
             value: '2'
+          - type: INTEGER
+            name: value_size
+            value: '35'
         - type: item
           name: Stratum level
-          x: '24'
-          width: '12'
+          x: '48'
+          width: '24'
           height: '3'
           fields:
           - type: ITEM
@@ -239,10 +242,13 @@ zabbix_export:
           - type: INTEGER
             name: show.1
             value: '2'
+          - type: INTEGER
+            name: decimal_places
+            value: '0'
         - type: svggraph
           name: NTP Offset & Jitter trend
           y: '3'
-          width: '36'
+          width: '72'
           height: '6'
           fields:
           - type: INTEGER
@@ -260,7 +266,7 @@ zabbix_export:
         - type: svggraph
           name: NTP Delay trend
           y: '9'
-          width: '36'
+          width: '72'
           height: '5'
           fields:
           - type: INTEGER
@@ -616,7 +622,7 @@ zabbix_export:
         widgets:
         - type: item
           name: NTP offset (ms)
-          width: '12'
+          width: '24'
           height: '3'
           fields:
           - type: ITEM
@@ -644,8 +650,8 @@ zabbix_export:
             value: '50'
         - type: item
           name: Synchronized peer
-          x: '12'
-          width: '12'
+          x: '24'
+          width: '24'
           height: '3'
           fields:
           - type: ITEM
@@ -659,10 +665,13 @@ zabbix_export:
           - type: INTEGER
             name: show.1
             value: '2'
+          - type: INTEGER
+            name: value_size
+            value: '35'
         - type: item
           name: Stratum level
-          x: '24'
-          width: '12'
+          x: '48'
+          width: '24'
           height: '3'
           fields:
           - type: ITEM
@@ -676,10 +685,13 @@ zabbix_export:
           - type: INTEGER
             name: show.1
             value: '2'
+          - type: INTEGER
+            name: decimal_places
+            value: '0'
         - type: svggraph
           name: NTP Offset & Jitter trend
           y: '3'
-          width: '36'
+          width: '72'
           height: '6'
           fields:
           - type: INTEGER
@@ -697,7 +709,7 @@ zabbix_export:
         - type: svggraph
           name: NTP Delay trend
           y: '9'
-          width: '36'
+          width: '72'
           height: '5'
           fields:
           - type: INTEGER
