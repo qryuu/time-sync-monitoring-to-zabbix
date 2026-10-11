@@ -4,6 +4,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 [![CI Test](https://github.com/qryuu/time-sync-monitoring-to-zabbix/actions/workflows/test.yml/badge.svg)](https://github.com/qryuu/time-sync-monitoring-to-zabbix/actions/workflows/test.yml)
+[![Zabbix Community Template PR](https://img.shields.io/badge/Zabbix%20Community%20Template-PR%20%23864-orange.svg)](https://github.com/zabbix/community-templates/pull/864)
 [![日本語](https://img.shields.io/badge/Language-%E6%97%A5%E6%9C%AC%E8%AA%9E-blue.svg)](#)
 [![English](https://img.shields.io/badge/Language-English-lightgrey.svg)](./README_EN.md)
 
@@ -15,6 +16,10 @@ NTP（ntpd）、Chrony、PTP（linuxptp / IEEE 1588）、およびリモートNT
 > [!TIP]
 > **🤖 AI コーディングアシスタントをご利用の場合 (AI-setup-ready)**:  
 > Antigravity, Cursor, Claude Code, GitHub Copilot などの AI アシスタントに対して**「このリポジトリをセットアップして」**と伝えるだけで、対話形式で環境判定・動作テスト・テンプレートインポートまで自動完了します。詳細は [`AGENTS.md`](./AGENTS.md) をご覧ください。
+
+> [!NOTE]
+> **🏛️ Zabbix 公式コミュニティテンプレート申請中**:  
+> 本リポジトリのテンプレート一式（Chrony, NTP, PTP）は、Zabbix 公式コミュニティテンプレートリポジトリ（[zabbix/community-templates#864](https://github.com/zabbix/community-templates/pull/864)）へ寄稿・申請中です。
 
 ---
 
