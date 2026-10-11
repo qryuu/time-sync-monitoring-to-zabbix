@@ -250,10 +250,10 @@ zabbix_export:
             value: '0'
           - type: STRING
             name: ds.0.items.0
-            value: ntp.offset.remote
+            value: 'NTPオフセット({$NTP_IP})'
           - type: STRING
             name: ds.0.items.1
-            value: ntp.jitter.remote
+            value: 'NTP分散({$NTP_IP})'
           - type: INTEGER
             name: righty
             value: '0'
@@ -268,7 +268,7 @@ zabbix_export:
             value: '1'
           - type: STRING
             name: ds.0.items.0
-            value: ntp.delay.remote
+            value: 'NTP推定遅延({$NTP_IP})'
           - type: INTEGER
             name: righty
             value: '0'
@@ -688,10 +688,10 @@ zabbix_export:
             value: '0'
           - type: STRING
             name: ds.0.items.0
-            value: ntp.offset
+            value: NTPオフセット
           - type: STRING
             name: ds.0.items.1
-            value: ntp.jitter
+            value: NTP分散
           - type: INTEGER
             name: righty
             value: '0'
@@ -706,7 +706,7 @@ zabbix_export:
             value: '1'
           - type: STRING
             name: ds.0.items.0
-            value: ntp.delay
+            value: NTP推定遅延
           - type: INTEGER
             name: righty
             value: '0'
