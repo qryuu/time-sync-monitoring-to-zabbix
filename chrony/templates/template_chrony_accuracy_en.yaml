@@ -474,10 +474,10 @@ zabbix_export:
             value: '0'
           - type: STRING
             name: ds.0.items.0
-            value: Lastoffset
+            value: NTP offset
           - type: STRING
             name: ds.0.items.1
-            value: RMSoffset
+            value: NTP RMS offset
           - type: INTEGER
             name: righty
             value: '0'
@@ -492,7 +492,7 @@ zabbix_export:
             value: '1'
           - type: STRING
             name: ds.0.items.0
-            value: Rootdelay
+            value: Network root delay
           - type: INTEGER
             name: righty
             value: '0'
