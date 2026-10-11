@@ -1,7 +1,20 @@
 # time-sync-monitoring-to-zabbix
 
+<div align="right">
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
+[![CI Test](https://github.com/qryuu/time-sync-monitoring-to-zabbix/actions/workflows/test.yml/badge.svg)](https://github.com/qryuu/time-sync-monitoring-to-zabbix/actions/workflows/test.yml)
+[![日本語](https://img.shields.io/badge/Language-%E6%97%A5%E6%9C%AC%E8%AA%9E-blue.svg)](#)
+[![English](https://img.shields.io/badge/Language-English-lightgrey.svg)](./README_EN.md)
+
+</div>
+
 Zabbix 7.0 / 6.0 LTS 対応の高精度時刻同期監視テンプレートスイートです。  
 NTP（ntpd）、Chrony、およびリモートNTPアプライアンス（Agentless / External check）の時刻精度・同期品質を包括的に可視化・監視します。（※将来のPTP拡張にも対応予定）
+
+> [!TIP]
+> **🤖 AI コーディングアシスタントをご利用の場合 (AI-setup-ready)**:  
+> Antigravity, Cursor, Claude Code, GitHub Copilot などの AI アシスタントに対して**「このリポジトリをセットアップして」**と伝えるだけで、対話形式で環境判定・動作テスト・テンプレートインポートまで自動完了します。詳細は [`AGENTS.md`](./AGENTS.md) をご覧ください。
 
 ---
 

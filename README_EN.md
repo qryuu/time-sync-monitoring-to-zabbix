@@ -1,7 +1,20 @@
 # time-sync-monitoring-to-zabbix
 
+<div align="right">
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
+[![CI Test](https://github.com/qryuu/time-sync-monitoring-to-zabbix/actions/workflows/test.yml/badge.svg)](https://github.com/qryuu/time-sync-monitoring-to-zabbix/actions/workflows/test.yml)
+[![English](https://img.shields.io/badge/Language-English-blue.svg)](#)
+[![日本語](https://img.shields.io/badge/Language-%E6%97%A5%E6%9C%AC%E8%AA%9E-lightgrey.svg)](./README.md)
+
+</div>
+
 Enterprise-grade time synchronization accuracy and quality monitoring template suite for **Zabbix 7.0 / 6.0 LTS**.  
 Comprehensive observability for **Chrony**, **NTP (ntpd)**, and **remote NTP appliances** (Agentless / External check), with future roadmap support for **PTP (IEEE 1588)**.
+
+> [!TIP]
+> **🤖 For AI Coding Assistants (AI-setup-ready)**:  
+> If you are using an AI assistant (Antigravity, Cursor, Claude Code, GitHub Copilot, etc.), simply ask: **"Set up this repository"**. The assistant will automatically inspect your environment, guide you through questions, run verification tests, and import the Zabbix template. See [`AGENTS.md`](./AGENTS.md) for details.
 
 ---
 
