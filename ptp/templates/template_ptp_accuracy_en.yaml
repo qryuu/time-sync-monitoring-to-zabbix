@@ -240,21 +240,6 @@ zabbix_export:
         expression: last(/template_ptp_accuracy_en/proc.num[phc2sys])=0
         name: 'PTP: phc2sys daemon is not running'
         priority: AVERAGE
-    graphs:
-    - uuid: d6a15dbd35144f448a45001367dda65f
-      name: 'PTP: Master offset history'
-      graph_items:
-      - color: 199C0D
-        item:
-          host: template_ptp_accuracy_en
-          key: ptp.offset_from_master
-    - uuid: f978516af4dd44da8e406d10c7e5c075
-      name: 'PTP: Path delay history'
-      graph_items:
-      - color: F63100
-        item:
-          host: template_ptp_accuracy_en
-          key: ptp.mean_path_delay
     macros:
     - macro: '{$PTP_OFFSET_WARN}'
       value: '1000'
@@ -262,3 +247,18 @@ zabbix_export:
     - macro: '{$PTP_OFFSET_CRIT}'
       value: '10000'
       description: Critical threshold for PTP master offset (nanoseconds, 10000ns = 10µs)
+  graphs:
+  - uuid: d6a15dbd35144f448a45001367dda65f
+    name: 'PTP: Master offset history'
+    graph_items:
+    - color: 199C0D
+      item:
+        host: template_ptp_accuracy_en
+        key: ptp.offset_from_master
+  - uuid: f978516af4dd44da8e406d10c7e5c075
+    name: 'PTP: Path delay history'
+    graph_items:
+    - color: F63100
+      item:
+        host: template_ptp_accuracy_en
+        key: ptp.mean_path_delay

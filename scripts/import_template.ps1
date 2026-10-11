@@ -23,7 +23,7 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$ApiToken,
 
-    [ValidateSet("Chrony", "NTP")]
+    [ValidateSet("Chrony", "NTP", "PTP")]
     [string]$TemplateType = "Chrony",
 
     [ValidateSet("Auto", "JA", "EN")]
@@ -55,10 +55,13 @@ $RepoRoot = Split-Path -Parent $ScriptDir
 
 if ($TemplateType -eq "Chrony") {
     $TemplateFile = Join-Path $RepoRoot "chrony\templates\template_chrony_accuracy_$ResolvedLang.yaml"
-    $TemplateTechName = "template_chrony_accuracy"
+    $TemplateTechName = if ($ResolvedLang -eq "ja") { "template_chrony_accuracy" } else { "template_chrony_accuracy_en" }
+} elseif ($TemplateType -eq "PTP") {
+    $TemplateFile = Join-Path $RepoRoot "ptp\templates\template_ptp_accuracy_$ResolvedLang.yaml"
+    $TemplateTechName = if ($ResolvedLang -eq "ja") { "template_ptp_accuracy" } else { "template_ptp_accuracy_en" }
 } else {
     $TemplateFile = Join-Path $RepoRoot "ntp\templates\template_ntp_accuracy_$ResolvedLang.yaml"
-    $TemplateTechName = "template_ntp_accuracy"
+    $TemplateTechName = if ($ResolvedLang -eq "ja") { "template_ntp_accuracy" } else { "template_ntp_accuracy_en" }
 }
 
 if (-not (Test-Path $TemplateFile)) {
