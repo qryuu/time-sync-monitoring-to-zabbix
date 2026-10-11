@@ -10,7 +10,7 @@
 </div>
 
 Enterprise-grade time synchronization accuracy and quality monitoring template suite for **Zabbix 7.0 / 6.0 LTS**.  
-Comprehensive observability for **Chrony**, **NTP (ntpd)**, and **remote NTP appliances** (Agentless / External check), with future roadmap support for **PTP (IEEE 1588)**.
+Comprehensive observability for **Chrony**, **NTP (ntpd)**, **PTP (linuxptp / IEEE 1588)**, and **remote NTP appliances** (Agentless / External check).
 
 > [!TIP]
 > **🤖 For AI Coding Assistants (AI-setup-ready)**:  
@@ -21,18 +21,21 @@ Comprehensive observability for **Chrony**, **NTP (ntpd)**, and **remote NTP app
 ## Key Highlights
 
 1. **Master Items Architecture (8x Load Reduction)**:
-   - Queries `chronyc` or `ntpq` once per polling cycle as a master item.
+   - Queries `chronyc`, `ntpq`, or `pmc` once per polling cycle as a master item.
    - Drastically cuts process forking and network overhead while guaranteeing strict atomic time correlation across all extracted metrics.
 2. **LLD (Low-Level Discovery) for All Synchronized Sources (Chrony & NTP)**:
    - Automatically discovers all configured upstream peers (active master, standbys, candidates, outlyers, and falsetickers).
    - Tracks per-peer reachability (0-255), delay, offset, jitter, and sync role status to catch silent upstream network failures before failover occurs.
-3. **Grafana-Inspired Modern SVG Aggregate Dashboards**:
+3. **PTP (IEEE 1588 / linuxptp) Microsecond & Nanosecond Precision**:
+   - Full support for `linuxptp` (`ptp4l`, `phc2sys`, `pmc`).
+   - Tracks offset from master (ns), mean path delay (ns), grandmaster presence, port state (`SLAVE`/`MASTER`), and daemon health.
+4. **Grafana-Inspired Modern SVG Aggregate Dashboards**:
    - Built with native Zabbix 7.0 `type: svggraph` and single-value stat cards (`type: item`).
    - Displays client system offset trends with translucent gradient area fills and overlays delay comparisons across all peers in one clean view.
-4. **Agentless External Check Script**:
+5. **Agentless External Check Script**:
    - Includes standalone script `ntp/scripts/zabbix_ntp_check.py` requiring zero external Python packages.
    - Directly measures remote NTP servers, GPS grandmasters, and network appliances from the Zabbix Server or Proxy.
-5. **Out-of-the-Box Bilingual Support (`_ja.yaml` / `_en.yaml`)**:
+6. **Out-of-the-Box Bilingual Support (`_ja.yaml` / `_en.yaml`)**:
    - Fully separate Japanese and English templates avoiding UI localization limitations.
    - Built-in OS language detection in PowerShell and Python automation scripts.
 
@@ -43,17 +46,22 @@ Comprehensive observability for **Chrony**, **NTP (ntpd)**, and **remote NTP app
 ```text
 time-sync-monitoring-to-zabbix/
 ├── chrony/
+│   ├── README.md                             # Chrony monitoring docs
 │   └── templates/
 │       ├── template_chrony_accuracy_en.yaml  # English template
 │       └── template_chrony_accuracy_ja.yaml  # Japanese template
 ├── ntp/
+│   ├── README.md                             # NTP monitoring docs
 │   ├── templates/
 │   │   ├── template_ntp_accuracy_en.yaml     # English template (Local & Remote)
 │   │   └── template_ntp_accuracy_ja.yaml     # Japanese template
 │   └── scripts/
 │       └── zabbix_ntp_check.py               # External check script
 ├── ptp/
-│   └── README.md                             # Future PTP (IEEE 1588) roadmap
+│   ├── README.md                             # PTP (IEEE 1588) monitoring docs
+│   └── templates/
+│       ├── template_ptp_accuracy_en.yaml     # English template (linuxptp)
+│       └── template_ptp_accuracy_ja.yaml     # Japanese template (linuxptp)
 ├── scripts/
 │   ├── import_template.ps1                   # Automated importer (PowerShell)
 │   └── import_template.py                    # Automated importer (Python)
