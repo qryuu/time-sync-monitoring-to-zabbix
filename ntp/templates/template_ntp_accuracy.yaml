@@ -174,6 +174,107 @@ zabbix_export:
     macros:
     - macro: '{$NTP_IP}'
       value: 127.0.0.1
+    dashboards:
+    - uuid: e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0
+      name: NTP (リモート) 時刻精度ダッシュボード
+      pages:
+      - name: Overview
+        widgets:
+        - type: item
+          name: NTPオフセット (ms)
+          width: '12'
+          height: '3'
+          fields:
+          - type: ITEM
+            name: itemid.0
+            value:
+              host: template_ntp_remote_accuracy
+              key: ntp.offset.remote
+          - type: INTEGER
+            name: show.0
+            value: '1'
+          - type: INTEGER
+            name: show.1
+            value: '2'
+          - type: STRING
+            name: thresholds.0.color
+            value: 1A7C11
+          - type: STRING
+            name: thresholds.0.threshold
+            value: '0'
+          - type: STRING
+            name: thresholds.1.color
+            value: F63100
+          - type: STRING
+            name: thresholds.1.threshold
+            value: '50'
+        - type: item
+          name: 同期サーバ
+          x: '12'
+          width: '12'
+          height: '3'
+          fields:
+          - type: ITEM
+            name: itemid.0
+            value:
+              host: template_ntp_remote_accuracy
+              key: ntp.peer.remote
+          - type: INTEGER
+            name: show.0
+            value: '1'
+          - type: INTEGER
+            name: show.1
+            value: '2'
+        - type: item
+          name: Stratum 階層
+          x: '24'
+          width: '12'
+          height: '3'
+          fields:
+          - type: ITEM
+            name: itemid.0
+            value:
+              host: template_ntp_remote_accuracy
+              key: ntp.stratum.remote
+          - type: INTEGER
+            name: show.0
+            value: '1'
+          - type: INTEGER
+            name: show.1
+            value: '2'
+        - type: svggraph
+          name: NTPオフセット & ジッター推移
+          y: '3'
+          width: '36'
+          height: '6'
+          fields:
+          - type: INTEGER
+            name: ds.0.color_palette
+            value: '0'
+          - type: STRING
+            name: ds.0.items.0
+            value: ntp.offset.remote
+          - type: STRING
+            name: ds.0.items.1
+            value: ntp.jitter.remote
+          - type: INTEGER
+            name: righty
+            value: '0'
+        - type: svggraph
+          name: NTP推定遅延 (Delay)
+          y: '9'
+          width: '36'
+          height: '5'
+          fields:
+          - type: INTEGER
+            name: ds.0.color_palette
+            value: '1'
+          - type: STRING
+            name: ds.0.items.0
+            value: ntp.delay.remote
+          - type: INTEGER
+            name: righty
+            value: '0'
   - uuid: fdb854ebadd64352a7ffe86ce1a69b98
     template: template_ntp_accuracy
     name: NTPテンプレート
@@ -358,6 +459,107 @@ zabbix_export:
         parameters:
         - (?m)^[*o]\s*\S+\s+\S+\s+\d+\s+\S+\s+\S+\s+\d+\s+\d+\s+[-\d.]+\s+[-\d.]+\s+([-\d.]+)
         - \1
+    dashboards:
+    - uuid: f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1
+      name: NTP  時刻精度ダッシュボード
+      pages:
+      - name: Overview
+        widgets:
+        - type: item
+          name: NTPオフセット (ms)
+          width: '12'
+          height: '3'
+          fields:
+          - type: ITEM
+            name: itemid.0
+            value:
+              host: template_ntp_accuracy
+              key: ntp.offset
+          - type: INTEGER
+            name: show.0
+            value: '1'
+          - type: INTEGER
+            name: show.1
+            value: '2'
+          - type: STRING
+            name: thresholds.0.color
+            value: 1A7C11
+          - type: STRING
+            name: thresholds.0.threshold
+            value: '0'
+          - type: STRING
+            name: thresholds.1.color
+            value: F63100
+          - type: STRING
+            name: thresholds.1.threshold
+            value: '50'
+        - type: item
+          name: 同期サーバ
+          x: '12'
+          width: '12'
+          height: '3'
+          fields:
+          - type: ITEM
+            name: itemid.0
+            value:
+              host: template_ntp_accuracy
+              key: ntp.peer
+          - type: INTEGER
+            name: show.0
+            value: '1'
+          - type: INTEGER
+            name: show.1
+            value: '2'
+        - type: item
+          name: Stratum 階層
+          x: '24'
+          width: '12'
+          height: '3'
+          fields:
+          - type: ITEM
+            name: itemid.0
+            value:
+              host: template_ntp_accuracy
+              key: ntp.stratum
+          - type: INTEGER
+            name: show.0
+            value: '1'
+          - type: INTEGER
+            name: show.1
+            value: '2'
+        - type: svggraph
+          name: NTPオフセット & ジッター推移
+          y: '3'
+          width: '36'
+          height: '6'
+          fields:
+          - type: INTEGER
+            name: ds.0.color_palette
+            value: '0'
+          - type: STRING
+            name: ds.0.items.0
+            value: ntp.offset
+          - type: STRING
+            name: ds.0.items.1
+            value: ntp.jitter
+          - type: INTEGER
+            name: righty
+            value: '0'
+        - type: svggraph
+          name: NTP推定遅延 (Delay)
+          y: '9'
+          width: '36'
+          height: '5'
+          fields:
+          - type: INTEGER
+            name: ds.0.color_palette
+            value: '1'
+          - type: STRING
+            name: ds.0.items.0
+            value: ntp.delay
+          - type: INTEGER
+            name: righty
+            value: '0'
   graphs:
   - uuid: 208dfe117b33462698719fdd7f69b4bb
     name: NTP精度情報

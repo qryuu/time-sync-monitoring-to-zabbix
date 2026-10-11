@@ -307,6 +307,203 @@ zabbix_export:
     - macro: '{$NTP_OFFSET_SMALL}'
       value: '5'
       description: 許容オフセット微小閾値（ms）
+    discovery_rules:
+    - uuid: 7c8b9d0e1f2a3b4c5d6e7f8a9b0c1d2e
+      name: NTP同期サーバー自動ディスカバリ
+      type: DEPENDENT
+      key: chrony.sources.discovery
+      delay: 1h
+      lifetime: 7d
+      description: chronyc -c sources から全同期候補サーバー（マスター・予備）を検出し、ピアごとのアイテムを自動生成します。
+      master_item:
+        key: system.run[chronyc sources]
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - "var lines = value.trim().split('\\n');\nvar output = [];\nfor (var i = 0; i < lines.length; i++) {\n    var line = lines[i].trim();\n    if (line === '' || line.indexOf('=') === 0) continue;\n    var cols = line.split(/\\s+/);\n    if (cols.length >= 9 && (line.indexOf('^') === 0 || line.indexOf('=') === 0 || line.indexOf('#') === 0)) {\n        var name = cols[1];\n        var state = line.substring(1, 2);\n        output.push({\n            '{#SOURCE_NAME}': name,\n            '{#SOURCE_STATE}': state\n        });\n    }\n}\nreturn JSON.stringify(output);"
+      item_prototypes:
+      - uuid: 8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d
+        name: 'NTPソース [{#SOURCE_NAME}]: 到達性(Reach)'
+        type: DEPENDENT
+        key: chrony.source.reach[{#SOURCE_NAME}]
+        delay: '0'
+        description: 過去8回の問合せ成功回数（8進数レジスタ値）
+        master_item:
+          key: system.run[chronyc sources]
+        preprocessing:
+        - type: REGEX
+          parameters:
+          - (?m)^[\^\#\=][\*\+\-\?\~\x]\s+{#SOURCE_NAME}\s+\S+\s+\S+\s+(\d+)
+          - \1
+        - type: OCTAL_TO_DECIMAL
+          parameters:
+          - ''
+        tags:
+        - tag: Application
+          value: chrony-sources
+        - tag: Source
+          value: '{#SOURCE_NAME}'
+        trigger_prototypes:
+        - uuid: 9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e
+          expression: last(/template_chrony_accuracy/chrony.source.reach[{#SOURCE_NAME}])=0
+          name: NTPソース [{#SOURCE_NAME}] への到達不可 (Reach 0)
+          priority: WARNING
+          description: 同期先サーバーへの問い合わせが8回連続で失敗しています。
+      - uuid: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6
+        name: 'NTPソース [{#SOURCE_NAME}]: 推定遅延'
+        type: DEPENDENT
+        key: chrony.source.delay[{#SOURCE_NAME}]
+        delay: '0'
+        value_type: FLOAT
+        units: ms
+        master_item:
+          key: system.run[chronyc sources]
+        preprocessing:
+        - type: REGEX
+          parameters:
+          - (?m)^[\^\#\=][\*\+\-\?\~\x]\s+{#SOURCE_NAME}\s+.*\s+([-\d.]+)ms\s+([-\d.]+)ms
+          - \1
+        tags:
+        - tag: Application
+          value: chrony-sources
+        - tag: Source
+          value: '{#SOURCE_NAME}'
+      - uuid: b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7
+        name: 'NTPソース [{#SOURCE_NAME}]: オフセット'
+        type: DEPENDENT
+        key: chrony.source.offset[{#SOURCE_NAME}]
+        delay: '0'
+        value_type: FLOAT
+        units: ms
+        master_item:
+          key: system.run[chronyc sources]
+        preprocessing:
+        - type: REGEX
+          parameters:
+          - (?m)^[\^\#\=][\*\+\-\?\~\x]\s+{#SOURCE_NAME}\s+.*\s+([-\d.]+)ms\s+([-\d.]+)ms
+          - \2
+        tags:
+        - tag: Application
+          value: chrony-sources
+        - tag: Source
+          value: '{#SOURCE_NAME}'
+      graph_prototypes:
+      - uuid: c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8
+        name: NTPソース [{#SOURCE_NAME}] 精度推移
+        graph_items:
+        - drawtype: SINGLE_LINE
+          color: 1A7C11
+          item:
+            host: template_chrony_accuracy
+            key: chrony.source.offset[{#SOURCE_NAME}]
+        - sortorder: '1'
+          drawtype: SINGLE_LINE
+          color: 2774A4
+          yaxisside: RIGHT
+          item:
+            host: template_chrony_accuracy
+            key: chrony.source.delay[{#SOURCE_NAME}]
+    dashboards:
+    - uuid: d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9
+      name: Chrony 時刻精度・同期サーバー集約ダッシュボード
+      pages:
+      - name: Overview
+        widgets:
+        - type: item
+          name: システム時刻オフセット
+          width: '12'
+          height: '3'
+          fields:
+          - type: ITEM
+            name: itemid.0
+            value:
+              host: template_chrony_accuracy
+              key: Lastoffset
+          - type: INTEGER
+            name: show.0
+            value: '1'
+          - type: INTEGER
+            name: show.1
+            value: '2'
+          - type: STRING
+            name: thresholds.0.color
+            value: 1A7C11
+          - type: STRING
+            name: thresholds.0.threshold
+            value: '0'
+          - type: STRING
+            name: thresholds.1.color
+            value: F63100
+          - type: STRING
+            name: thresholds.1.threshold
+            value: '5'
+        - type: item
+          name: 現在同期マスター
+          x: '12'
+          width: '12'
+          height: '3'
+          fields:
+          - type: ITEM
+            name: itemid.0
+            value:
+              host: template_chrony_accuracy
+              key: Reference
+          - type: INTEGER
+            name: show.0
+            value: '1'
+          - type: INTEGER
+            name: show.1
+            value: '2'
+        - type: item
+          name: Stratum 階層
+          x: '24'
+          width: '12'
+          height: '3'
+          fields:
+          - type: ITEM
+            name: itemid.0
+            value:
+              host: template_chrony_accuracy
+              key: Stratum
+          - type: INTEGER
+            name: show.0
+            value: '1'
+          - type: INTEGER
+            name: show.1
+            value: '2'
+        - type: svggraph
+          name: 時刻オフセット推移 (Last offset & RMS)
+          y: '3'
+          width: '36'
+          height: '6'
+          fields:
+          - type: INTEGER
+            name: ds.0.color_palette
+            value: '0'
+          - type: STRING
+            name: ds.0.items.0
+            value: Lastoffset
+          - type: STRING
+            name: ds.0.items.1
+            value: RMSoffset
+          - type: INTEGER
+            name: righty
+            value: '0'
+        - type: svggraph
+          name: ネットワーク合計遅延推移 (Root delay)
+          y: '9'
+          width: '36'
+          height: '5'
+          fields:
+          - type: INTEGER
+            name: ds.0.color_palette
+            value: '1'
+          - type: STRING
+            name: ds.0.items.0
+            value: Rootdelay
+          - type: INTEGER
+            name: righty
+            value: '0'
   graphs:
   - uuid: f3a3fa2555794a3caa0fd79f32fe8621
     name: chrony NTP精度情報
