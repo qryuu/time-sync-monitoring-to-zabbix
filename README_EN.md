@@ -104,8 +104,8 @@ sudo systemctl restart zabbix-agent # or zabbix-agent2
 ```
 
 > [!TIP]
-> **Sub-Millisecond & Chrony 4.x Ready**:  
-> High-precision environments like AWS EC2 (Amazon Time Sync: `169.254.169.123`) outputting in nanoseconds (`ns`) or microseconds (`us`) are automatically detected and converted to milliseconds (`ms`). 14-column output format from Chrony 4.x is fully supported out of the box.
+> **Sub-Millisecond & Chrony 3.x / 4.x Hybrid Compatibility**:  
+> High-precision environments like AWS EC2 (Amazon Time Sync: `169.254.169.123`) outputting in nanoseconds (`ns`) or microseconds (`us`) are automatically detected and converted to milliseconds (`ms`). Furthermore, the master item preprocessing dynamically detects column count, ensuring 100% seamless compatibility across both legacy Chrony 3.x (13-column, CentOS 7 / RHEL 7) and modern Chrony 4.x (14-column, AL2023 / Ubuntu 22.04+ / RHEL 8/9).
 
 ---
 

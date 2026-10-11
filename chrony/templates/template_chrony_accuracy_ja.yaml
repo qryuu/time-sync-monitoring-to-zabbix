@@ -18,17 +18,9 @@ zabbix_export:
       units: ms
       description: NTPサーバとの時刻ズレ
       preprocessing:
-      - type: CSV_TO_JSON
-        parameters:
-        - ','
-        - '"'
-        - '0'
       - type: JSONPATH
         parameters:
-        - $[0]['6']
-      - type: MULTIPLIER
-        parameters:
-        - '1000'
+        - $.last_offset_ms
       master_item:
         key: system.run[chronyc -c tracking]
       tags:
@@ -65,14 +57,9 @@ zabbix_export:
 
         '
       preprocessing:
-      - type: CSV_TO_JSON
-        parameters:
-        - ','
-        - '"'
-        - '0'
       - type: JSONPATH
         parameters:
-        - $[0]['14']
+        - $.leap_status
       master_item:
         key: system.run[chronyc -c tracking]
       tags:
@@ -92,14 +79,9 @@ zabbix_export:
       trends: '0'
       value_type: CHAR
       preprocessing:
-      - type: CSV_TO_JSON
-        parameters:
-        - ','
-        - '"'
-        - '0'
       - type: JSONPATH
         parameters:
-        - $[0]['2']
+        - $.reference
       master_item:
         key: system.run[chronyc -c tracking]
       tags:
@@ -114,17 +96,9 @@ zabbix_export:
       units: ms
       description: NTPサーバとの時刻ズレ
       preprocessing:
-      - type: CSV_TO_JSON
-        parameters:
-        - ','
-        - '"'
-        - '0'
       - type: JSONPATH
         parameters:
-        - $[0]['7']
-      - type: MULTIPLIER
-        parameters:
-        - '1000'
+        - $.rms_offset_ms
       master_item:
         key: system.run[chronyc -c tracking]
       tags:
@@ -139,17 +113,9 @@ zabbix_export:
       units: ms
       description: stratum-1 までのネットワーク合計遅延です。
       preprocessing:
-      - type: CSV_TO_JSON
-        parameters:
-        - ','
-        - '"'
-        - '0'
       - type: JSONPATH
         parameters:
-        - $[0]['11']
-      - type: MULTIPLIER
-        parameters:
-        - '1000'
+        - $.root_delay_ms
       master_item:
         key: system.run[chronyc -c tracking]
       tags:
@@ -162,14 +128,9 @@ zabbix_export:
       delay: '0'
       description: 監視対象サーバーのstratum階層
       preprocessing:
-      - type: CSV_TO_JSON
-        parameters:
-        - ','
-        - '"'
-        - '0'
       - type: JSONPATH
         parameters:
-        - $[0]['3']
+        - $.stratum
       master_item:
         key: system.run[chronyc -c tracking]
       tags:
@@ -220,6 +181,27 @@ zabbix_export:
       history: 60d
       trends: '0'
       value_type: TEXT
+      description: chronyc -c tracking の出力を取得し、Chrony 3.x (13列) / 4.x (14列) を自動判定してJSON化します。
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - |
+          var parts = value.trim().split(',');
+          var is_v4 = parts.length >= 14;
+          return JSON.stringify({
+              ref_id: parts[0],
+              reference: is_v4 ? parts[1] : parts[0],
+              stratum: parseInt(is_v4 ? parts[2] : parts[1]),
+              system_time_s: parseFloat(is_v4 ? parts[4] : parts[3]),
+              system_time_ms: parseFloat(is_v4 ? parts[4] : parts[3]) * 1000.0,
+              system_time_dir: parseFloat(is_v4 ? parts[4] : parts[3]) >= 0 ? 'fast' : 'slow',
+              last_offset_ms: parseFloat(is_v4 ? parts[5] : parts[4]) * 1000.0,
+              rms_offset_ms: parseFloat(is_v4 ? parts[6] : parts[5]) * 1000.0,
+              frequency_ppm: parseFloat(is_v4 ? parts[7] : parts[6]),
+              root_delay_ms: parseFloat(is_v4 ? parts[10] : parts[9]) * 1000.0,
+              update_interval_s: parseFloat(is_v4 ? parts[12] : parts[11]),
+              leap_status: is_v4 ? parts[13] : parts[12]
+          });
       request_method: POST
       tags:
       - tag: Application
@@ -233,17 +215,9 @@ zabbix_export:
       value_type: CHAR
       description: NTP時刻とsystem時刻との差の方向を示します。
       preprocessing:
-      - type: CSV_TO_JSON
-        parameters:
-        - ','
-        - '"'
-        - '0'
       - type: JSONPATH
         parameters:
-        - $[0]['5']
-      - type: JAVASCRIPT
-        parameters:
-        - 'return Number(value) >= 0 ? ''fast'' : ''slow'';'
+        - $.system_time_dir
       master_item:
         key: system.run[chronyc -c tracking]
       tags:
@@ -258,17 +232,9 @@ zabbix_export:
       units: ms
       description: NTP時刻とsystem時刻との差を示します。
       preprocessing:
-      - type: CSV_TO_JSON
-        parameters:
-        - ','
-        - '"'
-        - '0'
       - type: JSONPATH
         parameters:
-        - $[0]['5']
-      - type: MULTIPLIER
-        parameters:
-        - '1000'
+        - $.system_time_ms
       master_item:
         key: system.run[chronyc -c tracking]
       tags:
@@ -283,14 +249,9 @@ zabbix_export:
       units: s
       description: NTPサーバとの同期間隔を示します。
       preprocessing:
-      - type: CSV_TO_JSON
-        parameters:
-        - ','
-        - '"'
-        - '0'
       - type: JSONPATH
         parameters:
-        - $[0]['13']
+        - $.update_interval_s
       master_item:
         key: system.run[chronyc -c tracking]
       tags:
