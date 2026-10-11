@@ -32,13 +32,17 @@ This document defines the autonomous operational guidelines, diagnostic wizard, 
 - Import scripts (`import_template.ps1` and `import_template.py`) must inspect the OS locale (`Get-Culture` / `$LANG`) when `-Language Auto` is passed.
 
 ### Rule 6: Existing Template Handling & Safe Upgrade Protocol
-- **Pre-Import Query (`template.get`)**: Before calling `configuration.import`, check whether `template_ntp_accuracy` or `template_chrony_accuracy` already exists.
+- **Pre-Import Query (`template.get`)**: Before calling `configuration.import`, check whether `template_ntp_accuracy`, `template_chrony_accuracy`, or `template_ptp_accuracy` already exists.
 - **Historical Data Preservation**:
   - Always use `updateExisting: true` without `deleteMissing: true` so that existing item history/trends are strictly preserved.
   - If existing templates are linked to production hosts, notify the user with linked host counts before major schema updates.
 - **Legacy Version Coexistence**:
   - Legacy templates (`chrony_Monitoring-Japanese`, `NTP_Monitoring-Japanese`) use different technical names and will safely coexist without collision.
   - When legacy templates are detected on target hosts, assist the user in adding the new template and safely unlinking (without clearing history) the legacy template.
+
+### Rule 7: Strict Adherence to Official Scripts & Prohibition of Ad-hoc Bypasses
+- **Mandatory First Choice**: When importing templates, checking daemons, or verifying hosts, ALWAYS invoke the official repository scripts (`scripts/import_template.py` or `scripts/import_template.ps1`) as the primary execution path. NEVER bypass them by writing disposable one-liners (e.g., ad-hoc `python -c "..."` API scripts) or reinventing the wheel.
+- **Proper Script Evolution**: If an official script lacks support for a newly introduced feature (e.g., missing `--type ptp` or a new CLI flag), do NOT work around it with inline code. Instead, **first enhance the official script itself** with the required options/functions, and then execute that updated official script to complete the task. This ensures the repository tooling continuously evolves and remains fully tested.
 
 ---
 
@@ -49,8 +53,8 @@ When a user asks to "set up time synchronization monitoring" or "link to Zabbix"
 ```
 Step 1: Environment Detection
   ├─ Check OS: Linux vs Windows
-  ├─ Check Installed Daemons: chrony (active?) vs ntpd (active?) vs w32time
-  └─ Test CLI Output: `chronyc -c tracking` or `ntpq -p`
+  ├─ Check Installed Daemons: chrony (active?) vs ntpd (active?) vs ptp4l (active?) vs w32time
+  └─ Test CLI Output: `chronyc -c tracking`, `ntpq -p`, or `pmc -u -b 0 'GET TIME_STATUS_NP'`
 
 Step 2: Zabbix Agent Security Check
   ├─ Verify zabbix_agentd.conf / zabbix_agent2.conf:
@@ -58,9 +62,9 @@ Step 2: Zabbix Agent Security Check
   └─ Test agent execution: `zabbix_agentd -t "system.run[chronyc -c tracking]"`
 
 Step 3: Zabbix Template Import
-  ├─ Determine language (`ja` vs `en`)
-  ├─ Execute: `python scripts/import_template.py --url <URL> --token <TOKEN> --type chrony --host <TARGET>`
-  │  (or PowerShell: `.\scripts\import_template.ps1 -ZabbixUrl <URL> -ApiToken <TOKEN> -TemplateType Chrony`)
+  ├─ Determine language (`ja` vs `en`) and type (`chrony`, `ntp`, or `ptp`)
+  ├─ Execute: `python scripts/import_template.py --url <URL> --token <TOKEN> --type <chrony|ntp|ptp> --host <TARGET>`
+  │  (or PowerShell: `.\scripts\import_template.ps1 -ZabbixUrl <URL> -ApiToken <TOKEN> -TemplateType <Chrony|NTP|PTP>`)
   └─ Verify templateDashboards and discovery rules created
 
 Step 4: Real-time Verification
