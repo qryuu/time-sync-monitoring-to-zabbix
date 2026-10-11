@@ -23,3 +23,7 @@ Desktop.ini
 
 # Logs
 *.log
+
+# Internal dev handoffs and savepoints
+handoffs/
+HANDOFF*.md
