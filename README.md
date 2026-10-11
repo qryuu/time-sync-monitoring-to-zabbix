@@ -103,8 +103,8 @@ sudo systemctl restart zabbix-agent # または zabbix-agent2
 ```
 
 > [!TIP]
-> **超高精度環境 & Chrony 4.x に完全対応**:  
-> AWS EC2（Amazon Time Sync Service: `169.254.169.123`）など、ナノ秒（`ns`）やマイクロ秒（`us`）で同期する環境でも自動換算され、正常に記録されます。Chrony 4.x の 14 カラム出力にも完全対応しています。
+> **超高精度環境 & Chrony 3.x / 4.x ハイブリッド両対応**:  
+> AWS EC2（Amazon Time Sync Service: `169.254.169.123`）など、ナノ秒（`ns`）やマイクロ秒（`us`）で同期する環境でも自動換算され、正常に記録されます。さらに、マスターアイテム側でカラム数を自動判別するため、現行の Chrony 4.x（14カラム）はもちろん、レガシーな Chrony 3.x（CentOS 7, RHEL 7等の13カラム）でも壊れることなく 100% 互換動作します。
 
 ---
 

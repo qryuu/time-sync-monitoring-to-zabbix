@@ -1,28 +1,12 @@
-import csv
-import io
 import re
 import pytest
 
 # Sample output of `chronyc -c tracking`
-# Legacy 13-column format
+# Legacy 13-column format (Chrony 3.x / CentOS 7, RHEL 7, Ubuntu 18.04)
 SAMPLE_CHRONY_CSV_LEGACY = "85F3EEA3,2,Sun Oct 11 05:22:15 2026,-0.000042123,-0.000035000,0.000051234,12.345,-0.001,0.052,0.008234567,0.001234567,64.2,Normal\n"
 
 # Modern Chrony 4.x (14 columns including Reference Name/IP in column 2)
 # Real output on Amazon Linux 2023 / Chrony 4.3:
-# Col 1: Ref ID (A9FEA97B)
-# Col 2: Ref IP/Name (169.254.169.123)
-# Col 3: Stratum (4)
-# Col 4: Ref time UTC (Sun Oct 11 12:00:00 2026)
-# Col 5: System time (s) (-0.000004163)
-# Col 6: Last offset (s) (-0.000001554)
-# Col 7: RMS offset (s) (0.000005164)
-# Col 8: Frequency (ppm) (-12.345)
-# Col 9: Residual freq (ppm) (-0.001)
-# Col 10: Skew (ppm) (0.052)
-# Col 11: Root delay (s) (0.000771621)
-# Col 12: Root disp (s) (0.000123456)
-# Col 13: Update interval (s) (16.3)
-# Col 14: Leap status (Normal)
 SAMPLE_CHRONY_4X_CSV_NORMAL = (
     "A9FEA97B,169.254.169.123,4,Sun Oct 11 12:00:00 2026,"
     "-0.000004163,-0.000001554,0.000005164,-12.345,-0.001,0.052,"
@@ -34,30 +18,46 @@ SAMPLE_CHRONY_4X_CSV_UNSYNC = (
     "0.000000000,0.000000000,0.0,Not synchronized\n"
 )
 
-# Zabbix CSV_TO_JSON(0) simulation:
-# Produces a list containing an object whose keys are 1-based string indices: [{"1": ..., "2": ..., ...}]
-def zabbix_csv_to_json(csv_str: str):
-    reader = csv.reader(io.StringIO(csv_str.strip()))
-    row = next(reader)
-    return [{str(i + 1): val for i, val in enumerate(row)}]
+def parse_chrony_hybrid_js(raw_csv: str) -> dict:
+    """
+    Simulates Zabbix master item JavaScript preprocessing
+    which automatically detects Chrony 3.x (13 columns) vs Chrony 4.x (14 columns).
+    """
+    parts = raw_csv.strip().split(',')
+    is_v4 = len(parts) >= 14
 
-def parse_chrony_4x_zabbix(csv_str: str):
-    json_obj = zabbix_csv_to_json(csv_str)[0]
     return {
-        "ref_id": json_obj["1"],
-        "reference": json_obj["2"],
-        "stratum": int(json_obj["3"]),
-        "system_time_dir": "fast" if float(json_obj["5"]) >= 0 else "slow",
-        "system_time_ms": float(json_obj["5"]) * 1000.0,
-        "last_offset_ms": float(json_obj["6"]) * 1000.0,
-        "rms_offset_ms": float(json_obj["7"]) * 1000.0,
-        "root_delay_ms": float(json_obj["11"]) * 1000.0,
-        "update_interval": float(json_obj["13"]),
-        "leap_status": json_obj["14"],
+        "ref_id": parts[0],
+        "reference": parts[1] if is_v4 else parts[0],
+        "stratum": int(parts[2] if is_v4 else parts[1]),
+        "system_time_s": float(parts[4] if is_v4 else parts[3]),
+        "system_time_ms": float(parts[4] if is_v4 else parts[3]) * 1000.0,
+        "system_time_dir": "fast" if float(parts[4] if is_v4 else parts[3]) >= 0 else "slow",
+        "last_offset_ms": float(parts[5] if is_v4 else parts[4]) * 1000.0,
+        "rms_offset_ms": float(parts[6] if is_v4 else parts[5]) * 1000.0,
+        "frequency_ppm": float(parts[7] if is_v4 else parts[6]),
+        "root_delay_ms": float(parts[10] if is_v4 else parts[9]) * 1000.0,
+        "update_interval_s": float(parts[12] if is_v4 else parts[11]),
+        "leap_status": parts[13] if is_v4 else parts[12]
     }
 
-def test_chrony_4x_csv_normal():
-    metrics = parse_chrony_4x_zabbix(SAMPLE_CHRONY_4X_CSV_NORMAL)
+def test_chrony_3x_legacy_csv():
+    """Verify Chrony 3.x (13 columns) parses correctly without shifting columns."""
+    metrics = parse_chrony_hybrid_js(SAMPLE_CHRONY_CSV_LEGACY)
+    assert metrics["ref_id"] == "85F3EEA3"
+    assert metrics["reference"] == "85F3EEA3"
+    assert metrics["stratum"] == 2
+    assert metrics["system_time_dir"] == "slow"
+    assert abs(metrics["system_time_ms"] - (-0.042123)) < 1e-6
+    assert abs(metrics["last_offset_ms"] - (-0.035)) < 1e-6
+    assert abs(metrics["rms_offset_ms"] - 0.051234) < 1e-6
+    assert abs(metrics["root_delay_ms"] - 8.234567) < 1e-6
+    assert metrics["update_interval_s"] == 64.2
+    assert metrics["leap_status"] == "Normal"
+
+def test_chrony_4x_modern_csv():
+    """Verify Chrony 4.x (14 columns) parses correctly with dedicated Reference IP/Name."""
+    metrics = parse_chrony_hybrid_js(SAMPLE_CHRONY_4X_CSV_NORMAL)
     assert metrics["ref_id"] == "A9FEA97B"
     assert metrics["reference"] == "169.254.169.123"
     assert metrics["stratum"] == 4
@@ -66,11 +66,11 @@ def test_chrony_4x_csv_normal():
     assert abs(metrics["last_offset_ms"] - (-0.001554)) < 1e-6
     assert abs(metrics["rms_offset_ms"] - 0.005164) < 1e-6
     assert abs(metrics["root_delay_ms"] - 0.771621) < 1e-6
-    assert metrics["update_interval"] == 16.3
+    assert metrics["update_interval_s"] == 16.3
     assert metrics["leap_status"] == "Normal"
 
-def test_chrony_4x_csv_unsync():
-    metrics = parse_chrony_4x_zabbix(SAMPLE_CHRONY_4X_CSV_UNSYNC)
+def test_chrony_4x_unsync():
+    metrics = parse_chrony_hybrid_js(SAMPLE_CHRONY_4X_CSV_UNSYNC)
     assert metrics["stratum"] == 0
     assert metrics["leap_status"] == "Not synchronized"
     assert metrics["last_offset_ms"] == 0.0
@@ -109,4 +109,3 @@ def test_lld_multi_unit_parsing():
     assert m_offset is not None
     offset_ms = convert_unit_to_ms(m_offset.group(1), m_offset.group(2))
     assert abs(offset_ms - (-0.000552)) < 1e-6  # -552ns -> -0.000552ms
-
