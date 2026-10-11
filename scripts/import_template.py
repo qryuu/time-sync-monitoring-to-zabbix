@@ -109,9 +109,19 @@ def main():
     })
     print(f"[SUCCESS] Template '{tmpl_file.name}' imported successfully!")
 
-    # 4. Link or create host
+    # 5. Link or create host
     if args.host:
-        hosts = call_zabbix_api(args.url, args.token, "host.get", {"filter": {"host": [args.host]}})
+        # Search by technical host name first, then by visible display name
+        hosts = call_zabbix_api(args.url, args.token, "host.get", {
+            "filter": {"host": [args.host]},
+            "selectParentTemplates": ["templateid"]
+        })
+        if not hosts:
+            hosts = call_zabbix_api(args.url, args.token, "host.get", {
+                "filter": {"name": [args.host]},
+                "selectParentTemplates": ["templateid"]
+            })
+
         tmpl_objs = call_zabbix_api(args.url, args.token, "template.get", {"filter": {"host": [tech_name]}})
         if not tmpl_objs:
             sys.exit(f"[ERROR] Template '{tech_name}' not found in Zabbix after import.")
@@ -136,12 +146,22 @@ def main():
             })
             print(f"[SUCCESS] Created host '{args.host}' and linked template!")
         else:
-            hid = hosts[0]["hostid"]
-            call_zabbix_api(args.url, args.token, "host.update", {
-                "hostid": hid,
-                "templates": [{"templateid": tmpl_id}]
-            })
-            print(f"[SUCCESS] Linked template to existing host '{args.host}'!")
+            target_host = hosts[0]
+            hid = target_host["hostid"]
+            hname = target_host.get("name") or target_host.get("host")
+            # Preserve existing parent templates to avoid unlinking OS/DB templates
+            existing_tmpl_ids = {t["templateid"] for t in target_host.get("parentTemplates", [])}
+            if tmpl_id in existing_tmpl_ids:
+                print(f"[INFO] Template '{tech_name}' is already linked to host '{hname}'.")
+            else:
+                existing_tmpl_ids.add(tmpl_id)
+                merged_templates = [{"templateid": tid} for tid in sorted(existing_tmpl_ids)]
+                call_zabbix_api(args.url, args.token, "host.update", {
+                    "hostid": hid,
+                    "templates": merged_templates
+                })
+                preserved_count = len(existing_tmpl_ids) - 1
+                print(f"[SUCCESS] Safely linked template to existing host '{hname}' (preserved {preserved_count} existing templates)!")
 
 if __name__ == "__main__":
     main()

@@ -1,16 +1,13 @@
 zabbix_export:
   version: '7.0'
-  date: '2021-11-21T21:17:22Z'
   template_groups:
-  - uuid: e5be8e009c61477ca38b16ae08352a19
+  - uuid: a571c0d144b14fd4a87a9d9b2aa9fcd6
     name: Templates/Applications
   templates:
   - uuid: 024ab0f7fd4240ada2de6a143173c6a3
     template: template_ntp_remote_accuracy
     name: NTPテンプレート（リモート）
     description: "## Overview\n\nNTP accuracy Template の日本語版です  \n英語版は[こちら](cat-app/ntp-accuracy-template)English version of the template is in the [link](cat-app/ntp-accuracy-template) .\n\n\n \n\n\nテンプレートを利用する場合zabbix\\_agentd.confでリモートコマンドを有効にしてください。\n\n\nEnableRemoteCommands=1  \nAllowKey=system.run[*]  # For Zabbix Agent 5.0+\nUnsafeUserParameters=1\n\n\nZabbixAgentがインストールされた環境に対しては  \nNTPテンプレートが使用できます。\n\n\nNTPアプライアンスなどZabbixAgentが使用できない環境のNTPサーバに対しては  \nNTPテンプレート（リモート）が使用できます。\n\n\nNTPテンプレート（リモート）を利用する場合はホストマクロにおいて  \n{$NTP\\_IP}に監視対象のIPアドレスを指定してください。\n\n\nntpqによって表示されるすべての項目が監視できます。\n\n\nNTP精度情報をグラフ化することが可能です。\n\n\n \n"
-    template_groups:
-    - name: Templates/Applications
     items:
     - uuid: fecfe76f83874f26ba0633c24b4cbcfb
       name: ntpq({$NTP_IP})
@@ -175,7 +172,7 @@ zabbix_export:
     - macro: '{$NTP_IP}'
       value: 127.0.0.1
     dashboards:
-    - uuid: e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0
+    - uuid: e5f6a7b8c9d041f283b4c5d6e7f8a9b0
       name: NTP (リモート) 時刻精度ダッシュボード
       pages:
       - name: Overview
@@ -275,13 +272,13 @@ zabbix_export:
           - type: INTEGER
             name: righty
             value: '0'
+    groups:
+    - name: Templates/Applications
   - uuid: fdb854ebadd64352a7ffe86ce1a69b98
     template: template_ntp_accuracy
     name: NTPテンプレート
     description: "## Overview\n\nNTP accuracy Template の日本語版です  \n英語版は[こちら](cat-app/ntp-accuracy-template)English version of the template is in the [link](cat-app/ntp-accuracy-template) .\n\n\n \n\n\nテンプレートを利用する場合zabbix\\_agentd.confでリモートコマンドを有効にしてください。\n\n\nEnableRemoteCommands=1  \nAllowKey=system.run[*]  # For Zabbix Agent 5.0+\nUnsafeUserParameters=1\n\n\nZabbixAgentがインストールされた環境に対しては  \nNTPテンプレートが使用できます。\n\n\nNTPアプライアンスなどZabbixAgentが使用できない環境のNTPサーバに対しては  \nNTPテンプレート（リモート）が使用できます。\n\n\nNTPテンプレート（リモート）を利用する場合はホストマクロにおいて  \n{$NTP\\_IP}に監視対象のIPアドレスを指定してください。\n\n\nntpqによって表示されるすべての項目が監視できます。\n\n\nNTP精度情報をグラフ化することが可能です。\n\n\n \n\n\n\n## Overview\n\nNTP accuracy Template の日本語版です  \n英語版は[こちら](cat-app/ntp-accuracy-template)English version of the template is in the [link](cat-app/ntp-accuracy-template) .\n\n\n \n\n\nテンプレートを利用する場合zabbix\\_agentd.confでリモートコマンドを有効にしてください。\n\n\nEnableRemoteCommands=1  \nAllowKey=system.run[*]  # For Zabbix Agent 5.0+\nUnsafeUserParameters=1\n\n\nZabbixAgentがインストールされた環境に対しては\
       \  \nNTPテンプレートが使用できます。\n\n\nNTPアプライアンスなどZabbixAgentが使用できない環境のNTPサーバに対しては  \nNTPテンプレート（リモート）が使用できます。\n\n\nNTPテンプレート（リモート）を利用する場合はホストマクロにおいて  \n{$NTP\\_IP}に監視対象のIPアドレスを指定してください。\n\n\nntpqによって表示されるすべての項目が監視できます。\n\n\nNTP精度情報をグラフ化することが可能です。\n\n\n \n"
-    template_groups:
-    - name: Templates/Applications
     items:
     - uuid: 2a299cc8eb38459e95a1bbd18a53cd2a
       name: NTPプロセス
@@ -460,7 +457,7 @@ zabbix_export:
         - (?m)^[*o]\s*\S+\s+\S+\s+\d+\s+\S+\s+\S+\s+\d+\s+\d+\s+[-\d.]+\s+[-\d.]+\s+([-\d.]+)
         - \1
     dashboards:
-    - uuid: f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1
+    - uuid: f6a7b8c9d0e142a384c5d6e7f8a9b0c1
       name: NTP  時刻精度ダッシュボード
       pages:
       - name: Overview
@@ -560,6 +557,8 @@ zabbix_export:
           - type: INTEGER
             name: righty
             value: '0'
+    groups:
+    - name: Templates/Applications
   graphs:
   - uuid: 208dfe117b33462698719fdd7f69b4bb
     name: NTP精度情報

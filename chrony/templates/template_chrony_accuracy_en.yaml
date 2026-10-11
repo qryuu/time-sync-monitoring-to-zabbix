@@ -1,16 +1,13 @@
 zabbix_export:
   version: '7.0'
-  date: '2021-11-21T21:39:42Z'
   template_groups:
-  - uuid: e5be8e009c61477ca38b16ae08352a19
+  - uuid: a571c0d144b14fd4a87a9d9b2aa9fcd6
     name: Templates/Applications
   templates:
   - uuid: de2422c2cc1c4b91804570548a4f3e81
     template: template_chrony_accuracy
     name: Chrony Accuracy Monitoring
     description: Chrony time synchronization quality and sources accuracy monitoring template.
-    template_groups:
-    - name: Templates/Applications
     items:
     - uuid: ea13fc3c867c403395f31620546d2702
       name: NTP offset
@@ -28,7 +25,7 @@ zabbix_export:
         - '0'
       - type: JSONPATH
         parameters:
-        - $[0][4]
+        - $[0]['6']
       - type: MULTIPLIER
         parameters:
         - '1000'
@@ -75,7 +72,7 @@ zabbix_export:
         - '0'
       - type: JSONPATH
         parameters:
-        - $[0][12]
+        - $[0]['14']
       master_item:
         key: system.run[chronyc -c tracking]
       tags:
@@ -102,7 +99,7 @@ zabbix_export:
         - '0'
       - type: JSONPATH
         parameters:
-        - $[0][0]
+        - $[0]['2']
       master_item:
         key: system.run[chronyc -c tracking]
       tags:
@@ -124,7 +121,7 @@ zabbix_export:
         - '0'
       - type: JSONPATH
         parameters:
-        - $[0][5]
+        - $[0]['7']
       - type: MULTIPLIER
         parameters:
         - '1000'
@@ -149,7 +146,7 @@ zabbix_export:
         - '0'
       - type: JSONPATH
         parameters:
-        - $[0][9]
+        - $[0]['11']
       - type: MULTIPLIER
         parameters:
         - '1000'
@@ -172,7 +169,7 @@ zabbix_export:
         - '0'
       - type: JSONPATH
         parameters:
-        - $[0][1]
+        - $[0]['3']
       master_item:
         key: system.run[chronyc -c tracking]
       tags:
@@ -243,7 +240,7 @@ zabbix_export:
         - '0'
       - type: JSONPATH
         parameters:
-        - $[0][3]
+        - $[0]['5']
       - type: JAVASCRIPT
         parameters:
         - 'return Number(value) >= 0 ? ''fast'' : ''slow'';'
@@ -268,7 +265,7 @@ zabbix_export:
         - '0'
       - type: JSONPATH
         parameters:
-        - $[0][3]
+        - $[0]['5']
       - type: MULTIPLIER
         parameters:
         - '1000'
@@ -293,7 +290,7 @@ zabbix_export:
         - '0'
       - type: JSONPATH
         parameters:
-        - $[0][11]
+        - $[0]['13']
       master_item:
         key: system.run[chronyc -c tracking]
       tags:
@@ -308,7 +305,7 @@ zabbix_export:
       value: '5'
       description: 許容オフセット微小閾値（ms）
     discovery_rules:
-    - uuid: 7c8b9d0e1f2a3b4c5d6e7f8a9b0c1d2e
+    - uuid: 7c8b9d0e1f2a4b4c8d6e7f8a9b0c1d2e
       name: NTP sources discovery
       type: DEPENDENT
       key: chrony.sources.discovery
@@ -322,7 +319,7 @@ zabbix_export:
         parameters:
         - "var lines = value.trim().split('\\n');\nvar output = [];\nfor (var i = 0; i < lines.length; i++) {\n    var line = lines[i].trim();\n    if (line === '' || line.indexOf('=') === 0) continue;\n    var cols = line.split(/\\s+/);\n    if (cols.length >= 9 && (line.indexOf('^') === 0 || line.indexOf('=') === 0 || line.indexOf('#') === 0)) {\n        var name = cols[1];\n        var state = line.substring(1, 2);\n        output.push({\n            '{#SOURCE_NAME}': name,\n            '{#SOURCE_STATE}': state\n        });\n    }\n}\nreturn JSON.stringify(output);"
       item_prototypes:
-      - uuid: 8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d
+      - uuid: 8a9b0c1d2e3f4a5b8c7d8e9f0a1b2c3d
         name: 'NTP source [{#SOURCE_NAME}]: Reachability'
         type: DEPENDENT
         key: chrony.source.reach[{#SOURCE_NAME}]
@@ -333,7 +330,7 @@ zabbix_export:
         preprocessing:
         - type: REGEX
           parameters:
-          - (?m)^[\^\#\=][\*\+\-\?\~\x]\s+{#SOURCE_NAME}\s+\S+\s+\S+\s+(\d+)
+          - (?m)^[\^\#\=][\*\+\-\?\~x]\s+{#SOURCE_NAME}\s+\S+\s+\S+\s+(\d+)
           - \1
         - type: OCTAL_TO_DECIMAL
           parameters:
@@ -344,12 +341,12 @@ zabbix_export:
         - tag: Source
           value: '{#SOURCE_NAME}'
         trigger_prototypes:
-        - uuid: 9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e
+        - uuid: 9b0c1d2e3f4a4b6c8d8e9f0a1b2c3d4e
           expression: last(/template_chrony_accuracy/chrony.source.reach[{#SOURCE_NAME}])=0
           name: NTP source [{#SOURCE_NAME}] is unreachable (Reach 0)
           priority: WARNING
           description: 同期先サーバーへの問い合わせが8回連続で失敗しています。
-      - uuid: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6
+      - uuid: a1b2c3d4e5f647b889d0e1f2a3b4c5d6
         name: 'NTP source [{#SOURCE_NAME}]: Delay'
         type: DEPENDENT
         key: chrony.source.delay[{#SOURCE_NAME}]
@@ -361,14 +358,31 @@ zabbix_export:
         preprocessing:
         - type: REGEX
           parameters:
-          - (?m)^[\^\#\=][\*\+\-\?\~\x]\s+{#SOURCE_NAME}\s+.*\s+([-\d.]+)ms\s+([-\d.]+)ms
-          - \1
+          - (?m)^[\^\#\=][\*\+\-\?\~x]\s+{#SOURCE_NAME}\s+.*?\+/-\s*([+-]?[\d.]+)(ns|us|ms|s)
+          - \1\2
+        - type: JAVASCRIPT
+          parameters:
+          - 'var m = value.match(/([+-]?[\d.]+)(ns|us|ms|s)/);
+
+            if (!m) return 0;
+
+            var v = parseFloat(m[1]), u = m[2];
+
+            if (u === ''ns'') return v / 1000000;
+
+            if (u === ''us'') return v / 1000;
+
+            if (u === ''ms'') return v;
+
+            if (u === ''s'') return v * 1000;
+
+            return v;'
         tags:
         - tag: Application
           value: chrony-sources
         - tag: Source
           value: '{#SOURCE_NAME}'
-      - uuid: b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7
+      - uuid: b2c3d4e5f6a748c980e1f2a3b4c5d6e7
         name: 'NTP source [{#SOURCE_NAME}]: Offset'
         type: DEPENDENT
         key: chrony.source.offset[{#SOURCE_NAME}]
@@ -380,15 +394,32 @@ zabbix_export:
         preprocessing:
         - type: REGEX
           parameters:
-          - (?m)^[\^\#\=][\*\+\-\?\~\x]\s+{#SOURCE_NAME}\s+.*\s+([-\d.]+)ms\s+([-\d.]+)ms
-          - \2
+          - (?m)^[\^\#\=][\*\+\-\?\~x]\s+{#SOURCE_NAME}\s+.*?\s+([+-]?[\d.]+)(ns|us|ms|s)\[
+          - \1\2
+        - type: JAVASCRIPT
+          parameters:
+          - 'var m = value.match(/([+-]?[\d.]+)(ns|us|ms|s)/);
+
+            if (!m) return 0;
+
+            var v = parseFloat(m[1]), u = m[2];
+
+            if (u === ''ns'') return v / 1000000;
+
+            if (u === ''us'') return v / 1000;
+
+            if (u === ''ms'') return v;
+
+            if (u === ''s'') return v * 1000;
+
+            return v;'
         tags:
         - tag: Application
           value: chrony-sources
         - tag: Source
           value: '{#SOURCE_NAME}'
       graph_prototypes:
-      - uuid: c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8
+      - uuid: c3d4e5f6a7b849d081f2a3b4c5d6e7f8
         name: NTP source [{#SOURCE_NAME}] accuracy trend
         graph_items:
         - drawtype: SINGLE_LINE
@@ -404,7 +435,7 @@ zabbix_export:
             host: template_chrony_accuracy
             key: chrony.source.delay[{#SOURCE_NAME}]
     dashboards:
-    - uuid: d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9
+    - uuid: d4e5f6a7b8c940e182a3b4c5d6e7f8a9
       name: Chrony Time Sync & Sources Aggregate Dashboard
       pages:
       - name: Overview
@@ -504,6 +535,8 @@ zabbix_export:
           - type: INTEGER
             name: righty
             value: '0'
+    groups:
+    - name: Templates/Applications
   graphs:
   - uuid: f3a3fa2555794a3caa0fd79f32fe8621
     name: chrony NTP精度情報
