@@ -274,6 +274,159 @@ zabbix_export:
             value: '0'
     groups:
     - name: Templates/Applications
+    discovery_rules:
+    - uuid: 66d290070d0a4d9ab52ffda2352cdea2
+      name: NTPピア自動検出({$NTP_IP})
+      type: DEPENDENT
+      key: ntp.peers.discovery.remote
+      delay: '0'
+      master_item:
+        key: system.run[ntpq -p {$NTP_IP}]
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - "var lines = value.trim().split('\\n');\nvar output = [];\nfor (var i = 0; i < lines.length; i++) {\n    var line = lines[i].trim();\n    if (line === '' || line.indexOf('=') === 0 || line.indexOf('remote') === 0) continue;\n    var m = line.match(/^[*+x#o. -]?\\s*(\\S+)/);\n    if (m && m[1]) {\n        output.push({\n            '{#PEER_NAME}': m[1]\n        });\n    }\n}\nreturn JSON.stringify(output);"
+      item_prototypes:
+      - uuid: eb5e29a790c14f30a75ac6d369f1fac1
+        name: 'NTPピア [{#PEER_NAME}]: 到達性(Reach)'
+        type: DEPENDENT
+        key: ntp.peer.reach.remote[{#PEER_NAME}]
+        delay: '0'
+        description: 過去8回の問合せ成功回数（8進数レジスタ値）
+        master_item:
+          key: system.run[ntpq -p {$NTP_IP}]
+        preprocessing:
+        - type: REGEX
+          parameters:
+          - (?m)^[*+x#o. -]?\s*{#PEER_NAME}\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+(\d+)
+          - \1
+        - type: OCTAL_TO_DECIMAL
+          parameters:
+          - ''
+        tags:
+        - tag: Application
+          value: NTP-Peers
+        - tag: Peer
+          value: '{#PEER_NAME}'
+        trigger_prototypes:
+        - uuid: 7dc819f9c56f42479152b3eababa3190
+          expression: last(/template_ntp_remote_accuracy/ntp.peer.reach.remote[{#PEER_NAME}])=0
+          name: NTPピア [{#PEER_NAME}] への到達不可 (Reach 0)
+          priority: WARNING
+          description: NTPピアへの問い合わせが8回連続で失敗しています。
+      - uuid: 0f0d7a566f74497fa126d192cf8a810f
+        name: 'NTPピア [{#PEER_NAME}]: 推定遅延'
+        type: DEPENDENT
+        key: ntp.peer.delay.remote[{#PEER_NAME}]
+        delay: '0'
+        value_type: FLOAT
+        units: ms
+        master_item:
+          key: system.run[ntpq -p {$NTP_IP}]
+        preprocessing:
+        - type: REGEX
+          parameters:
+          - (?m)^[*+x#o. -]?\s*{#PEER_NAME}\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+\d+\s+([-\d.]+)
+          - \1
+        tags:
+        - tag: Application
+          value: NTP-Peers
+        - tag: Peer
+          value: '{#PEER_NAME}'
+      - uuid: e06c8dbdb7784975a017841211ef3f3c
+        name: 'NTPピア [{#PEER_NAME}]: オフセット'
+        type: DEPENDENT
+        key: ntp.peer.offset.remote[{#PEER_NAME}]
+        delay: '0'
+        value_type: FLOAT
+        units: ms
+        master_item:
+          key: system.run[ntpq -p {$NTP_IP}]
+        preprocessing:
+        - type: REGEX
+          parameters:
+          - (?m)^[*+x#o. -]?\s*{#PEER_NAME}\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+\d+\s+[-\d.]+\s+([-\d.]+)
+          - \1
+        tags:
+        - tag: Application
+          value: NTP-Peers
+        - tag: Peer
+          value: '{#PEER_NAME}'
+      - uuid: 0f5f67ea30d04435899a8b5b84ff372d
+        name: 'NTPピア [{#PEER_NAME}]: 分散(Jitter)'
+        type: DEPENDENT
+        key: ntp.peer.jitter.remote[{#PEER_NAME}]
+        delay: '0'
+        value_type: FLOAT
+        units: ms
+        master_item:
+          key: system.run[ntpq -p {$NTP_IP}]
+        preprocessing:
+        - type: REGEX
+          parameters:
+          - (?m)^[*+x#o. -]?\s*{#PEER_NAME}\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+\d+\s+[-\d.]+\s+[-\d.]+\s+([-\d.]+)
+          - \1
+        tags:
+        - tag: Application
+          value: NTP-Peers
+        - tag: Peer
+          value: '{#PEER_NAME}'
+      - uuid: 07a451f579044885bbc7cd7b9a84ce17
+        name: 'NTPピア [{#PEER_NAME}]: 同期状態'
+        type: DEPENDENT
+        key: ntp.peer.status.remote[{#PEER_NAME}]
+        delay: '0'
+        trends: '0'
+        value_type: CHAR
+        description: 同期役割 (master/standby/outlyer/falseticker/unreached)
+        master_item:
+          key: system.run[ntpq -p {$NTP_IP}]
+        preprocessing:
+        - type: REGEX
+          parameters:
+          - (?m)^([*+x#o. -]?)\s*{#PEER_NAME}
+          - \1
+        - type: JAVASCRIPT
+          parameters:
+          - 'var t = value.trim();
+
+            if (t === ''*'' || t === ''o'') return ''master'';
+
+            if (t === ''+'') return ''standby'';
+
+            if (t === ''-'') return ''outlyer'';
+
+            if (t === ''x'') return ''falseticker'';
+
+            if (t === ''#'') return ''selected'';
+
+            return ''unreached'';'
+        tags:
+        - tag: Application
+          value: NTP-Peers
+        - tag: Peer
+          value: '{#PEER_NAME}'
+      graph_prototypes:
+      - uuid: 0a1148b8359f4afdb912836df812c348
+        name: NTPピア [{#PEER_NAME}] 精度推移
+        graph_items:
+        - drawtype: SINGLE_LINE
+          color: 1A7C11
+          item:
+            host: template_ntp_remote_accuracy
+            key: ntp.peer.delay.remote[{#PEER_NAME}]
+        - sortorder: '1'
+          drawtype: SINGLE_LINE
+          color: F63100
+          item:
+            host: template_ntp_remote_accuracy
+            key: ntp.peer.offset.remote[{#PEER_NAME}]
+        - sortorder: '2'
+          drawtype: SINGLE_LINE
+          color: 0040FF
+          item:
+            host: template_ntp_remote_accuracy
+            key: ntp.peer.jitter.remote[{#PEER_NAME}]
   - uuid: fdb854ebadd64352a7ffe86ce1a69b98
     template: template_ntp_accuracy
     name: NTPテンプレート
@@ -559,6 +712,159 @@ zabbix_export:
             value: '0'
     groups:
     - name: Templates/Applications
+    discovery_rules:
+    - uuid: 186ca710fe7a44239d4c9d679e59c898
+      name: NTPピア自動検出
+      type: DEPENDENT
+      key: ntp.peers.discovery
+      delay: '0'
+      master_item:
+        key: system.run[ntpq -p]
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - "var lines = value.trim().split('\\n');\nvar output = [];\nfor (var i = 0; i < lines.length; i++) {\n    var line = lines[i].trim();\n    if (line === '' || line.indexOf('=') === 0 || line.indexOf('remote') === 0) continue;\n    var m = line.match(/^[*+x#o. -]?\\s*(\\S+)/);\n    if (m && m[1]) {\n        output.push({\n            '{#PEER_NAME}': m[1]\n        });\n    }\n}\nreturn JSON.stringify(output);"
+      item_prototypes:
+      - uuid: f7a2c8cbfd20498386eaf8d9fd87b692
+        name: 'NTPピア [{#PEER_NAME}]: 到達性(Reach)'
+        type: DEPENDENT
+        key: ntp.peer.reach[{#PEER_NAME}]
+        delay: '0'
+        description: 過去8回の問合せ成功回数（8進数レジスタ値）
+        master_item:
+          key: system.run[ntpq -p]
+        preprocessing:
+        - type: REGEX
+          parameters:
+          - (?m)^[*+x#o. -]?\s*{#PEER_NAME}\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+(\d+)
+          - \1
+        - type: OCTAL_TO_DECIMAL
+          parameters:
+          - ''
+        tags:
+        - tag: Application
+          value: NTP-Peers
+        - tag: Peer
+          value: '{#PEER_NAME}'
+        trigger_prototypes:
+        - uuid: 3e077ba13b6446388241bf40e914dd8b
+          expression: last(/template_ntp_accuracy/ntp.peer.reach[{#PEER_NAME}])=0
+          name: NTPピア [{#PEER_NAME}] への到達不可 (Reach 0)
+          priority: WARNING
+          description: NTPピアへの問い合わせが8回連続で失敗しています。
+      - uuid: 512671bdf34b4f6d9fc22db1dc111920
+        name: 'NTPピア [{#PEER_NAME}]: 推定遅延'
+        type: DEPENDENT
+        key: ntp.peer.delay[{#PEER_NAME}]
+        delay: '0'
+        value_type: FLOAT
+        units: ms
+        master_item:
+          key: system.run[ntpq -p]
+        preprocessing:
+        - type: REGEX
+          parameters:
+          - (?m)^[*+x#o. -]?\s*{#PEER_NAME}\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+\d+\s+([-\d.]+)
+          - \1
+        tags:
+        - tag: Application
+          value: NTP-Peers
+        - tag: Peer
+          value: '{#PEER_NAME}'
+      - uuid: 609ccef990b14aa6b1bf52ea26f7345b
+        name: 'NTPピア [{#PEER_NAME}]: オフセット'
+        type: DEPENDENT
+        key: ntp.peer.offset[{#PEER_NAME}]
+        delay: '0'
+        value_type: FLOAT
+        units: ms
+        master_item:
+          key: system.run[ntpq -p]
+        preprocessing:
+        - type: REGEX
+          parameters:
+          - (?m)^[*+x#o. -]?\s*{#PEER_NAME}\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+\d+\s+[-\d.]+\s+([-\d.]+)
+          - \1
+        tags:
+        - tag: Application
+          value: NTP-Peers
+        - tag: Peer
+          value: '{#PEER_NAME}'
+      - uuid: 2f183174a46c4bfc8848e574fa967755
+        name: 'NTPピア [{#PEER_NAME}]: 分散(Jitter)'
+        type: DEPENDENT
+        key: ntp.peer.jitter[{#PEER_NAME}]
+        delay: '0'
+        value_type: FLOAT
+        units: ms
+        master_item:
+          key: system.run[ntpq -p]
+        preprocessing:
+        - type: REGEX
+          parameters:
+          - (?m)^[*+x#o. -]?\s*{#PEER_NAME}\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+\d+\s+[-\d.]+\s+[-\d.]+\s+([-\d.]+)
+          - \1
+        tags:
+        - tag: Application
+          value: NTP-Peers
+        - tag: Peer
+          value: '{#PEER_NAME}'
+      - uuid: f807307f218c4c2cb1f77e1ee0ca68f5
+        name: 'NTPピア [{#PEER_NAME}]: 同期状態'
+        type: DEPENDENT
+        key: ntp.peer.status[{#PEER_NAME}]
+        delay: '0'
+        trends: '0'
+        value_type: CHAR
+        description: 同期役割 (master/standby/outlyer/falseticker/unreached)
+        master_item:
+          key: system.run[ntpq -p]
+        preprocessing:
+        - type: REGEX
+          parameters:
+          - (?m)^([*+x#o. -]?)\s*{#PEER_NAME}
+          - \1
+        - type: JAVASCRIPT
+          parameters:
+          - 'var t = value.trim();
+
+            if (t === ''*'' || t === ''o'') return ''master'';
+
+            if (t === ''+'') return ''standby'';
+
+            if (t === ''-'') return ''outlyer'';
+
+            if (t === ''x'') return ''falseticker'';
+
+            if (t === ''#'') return ''selected'';
+
+            return ''unreached'';'
+        tags:
+        - tag: Application
+          value: NTP-Peers
+        - tag: Peer
+          value: '{#PEER_NAME}'
+      graph_prototypes:
+      - uuid: 2f78be482d1243178b70d248e07a2f6d
+        name: NTPピア [{#PEER_NAME}] 精度推移
+        graph_items:
+        - drawtype: SINGLE_LINE
+          color: 1A7C11
+          item:
+            host: template_ntp_accuracy
+            key: ntp.peer.delay[{#PEER_NAME}]
+        - sortorder: '1'
+          drawtype: SINGLE_LINE
+          color: F63100
+          item:
+            host: template_ntp_accuracy
+            key: ntp.peer.offset[{#PEER_NAME}]
+        - sortorder: '2'
+          drawtype: SINGLE_LINE
+          color: 0040FF
+          item:
+            host: template_ntp_accuracy
+            key: ntp.peer.jitter[{#PEER_NAME}]
   graphs:
   - uuid: 208dfe117b33462698719fdd7f69b4bb
     name: NTP精度情報
