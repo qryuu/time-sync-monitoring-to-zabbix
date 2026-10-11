@@ -39,7 +39,7 @@ def main():
     parser = argparse.ArgumentParser(description="Import time synchronization templates into Zabbix 7.0/6.0")
     parser.add_argument("--url", required=True, help="Zabbix Web URL (e.g. http://localhost/zabbix)")
     parser.add_argument("--token", required=True, help="Zabbix API Token")
-    parser.add_argument("--type", choices=["chrony", "ntp"], default="chrony", help="Template type to import")
+    parser.add_argument("--type", choices=["chrony", "ntp", "ptp"], default="chrony", help="Template type to import")
     parser.add_argument("--language", choices=["auto", "ja", "en"], default="auto", help="Template language")
     parser.add_argument("--host", default="", help="Optional hostname to link/create")
 
@@ -67,7 +67,7 @@ def main():
         sys.exit(f"[ERROR] Template file not found: {tmpl_file}")
 
     template_content = tmpl_file.read_text(encoding="utf-8")
-    tech_name = f"template_{args.type}_accuracy"
+    tech_name = f"template_{args.type}_accuracy" if resolved_lang == "ja" else f"template_{args.type}_accuracy_en"
 
     # 3. Check for existing or legacy templates
     try:

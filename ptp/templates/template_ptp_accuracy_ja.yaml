@@ -240,21 +240,6 @@ zabbix_export:
         expression: last(/template_ptp_accuracy/proc.num[phc2sys])=0
         name: phc2sys デーモンが停止しています
         priority: AVERAGE
-    graphs:
-    - uuid: 4f223b1f01674d5fac1db91981fbb88d
-      name: PTP マスターオフセット推移
-      graph_items:
-      - color: 199C0D
-        item:
-          host: template_ptp_accuracy
-          key: ptp.offset_from_master
-    - uuid: 42124079a4294d869324fd7c3f4b514c
-      name: PTP 経路遅延推移
-      graph_items:
-      - color: F63100
-        item:
-          host: template_ptp_accuracy
-          key: ptp.mean_path_delay
     macros:
     - macro: '{$PTP_OFFSET_WARN}'
       value: '1000'
@@ -262,3 +247,18 @@ zabbix_export:
     - macro: '{$PTP_OFFSET_CRIT}'
       value: '10000'
       description: PTP マスターオフセット重度閾値 (ナノ秒、10000ns = 10µs)
+  graphs:
+  - uuid: 4f223b1f01674d5fac1db91981fbb88d
+    name: PTP マスターオフセット推移
+    graph_items:
+    - color: 199C0D
+      item:
+        host: template_ptp_accuracy
+        key: ptp.offset_from_master
+  - uuid: 42124079a4294d869324fd7c3f4b514c
+    name: PTP 経路遅延推移
+    graph_items:
+    - color: F63100
+      item:
+        host: template_ptp_accuracy
+        key: ptp.mean_path_delay
