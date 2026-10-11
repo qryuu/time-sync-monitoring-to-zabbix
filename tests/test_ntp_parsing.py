@@ -64,3 +64,80 @@ def test_ntpq_ipv6_extraction():
     assert extract_metric(SAMPLE_NTPQ_IPV6, "delay") == "5.678"
     assert extract_metric(SAMPLE_NTPQ_IPV6, "offset") == "-0.012"
     assert extract_metric(SAMPLE_NTPQ_IPV6, "jitter") == "0.034"
+
+# NTP LLD Simulation Functions
+def ntp_peers_discovery(raw_text: str):
+    lines = raw_text.strip().split('\n')
+    peers = []
+    for line in lines:
+        line = line.strip()
+        if not line or line.startswith('===') or line.startswith('remote'):
+            continue
+        m = re.match(r"^[*+x#o. -]?\s*(\S+)", line)
+        if m and m.group(1):
+            peers.append({"{#PEER_NAME}": m.group(1)})
+    return peers
+
+def test_ntp_lld_discovery():
+    discovered = ntp_peers_discovery(SAMPLE_NTPQ_STANDARD)
+    peer_names = [p["{#PEER_NAME}"] for p in discovered]
+    assert peer_names == ["ntp1.jst.mfeed.", "ntp2.jst.mfeed.", "ntp3.jst.mfeed."]
+
+def test_ntp_lld_prototypes_extraction():
+    # Prototypes regex matching
+    def extract_peer_metric(text: str, peer: str):
+        escaped_peer = re.escape(peer)
+        reach_re = re.compile(rf"(?m)^[*+x#o. -]?\s*{escaped_peer}\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+(\d+)")
+        delay_re = re.compile(rf"(?m)^[*+x#o. -]?\s*{escaped_peer}\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+\d+\s+([-\d.]+)")
+        offset_re = re.compile(rf"(?m)^[*+x#o. -]?\s*{escaped_peer}\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+\d+\s+[-\d.]+\s+([-\d.]+)")
+        jitter_re = re.compile(rf"(?m)^[*+x#o. -]?\s*{escaped_peer}\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+\d+\s+[-\d.]+\s+[-\d.]+\s+([-\d.]+)")
+        status_re = re.compile(rf"(?m)^([*+x#o. -]?)\s*{escaped_peer}")
+
+        m_status = status_re.search(text)
+        raw_status = m_status.group(1).strip() if m_status else ""
+        if raw_status in ['*', 'o']:
+            status = 'master'
+        elif raw_status == '+':
+            status = 'standby'
+        elif raw_status == '-':
+            status = 'outlyer'
+        elif raw_status == 'x':
+            status = 'falseticker'
+        elif raw_status == '#':
+            status = 'selected'
+        else:
+            status = 'unreached'
+
+        return {
+            "status": status,
+            "reach_octal": reach_re.search(text).group(1),
+            "reach_dec": int(reach_re.search(text).group(1), 8),
+            "delay": float(delay_re.search(text).group(1)),
+            "offset": float(offset_re.search(text).group(1)),
+            "jitter": float(jitter_re.search(text).group(1)),
+        }
+
+    # 1. Master peer
+    m1 = extract_peer_metric(SAMPLE_NTPQ_STANDARD, "ntp1.jst.mfeed.")
+    assert m1["status"] == "master"
+    assert m1["reach_dec"] == 255
+    assert m1["delay"] == 8.234
+    assert m1["offset"] == -0.042
+    assert m1["jitter"] == 0.051
+
+    # 2. Standby / Candidate peer
+    m2 = extract_peer_metric(SAMPLE_NTPQ_STANDARD, "ntp2.jst.mfeed.")
+    assert m2["status"] == "standby"
+    assert m2["reach_dec"] == 255
+    assert m2["delay"] == 11.512
+    assert m2["offset"] == 0.125
+    assert m2["jitter"] == 0.082
+
+    # 3. Outlyer peer
+    m3 = extract_peer_metric(SAMPLE_NTPQ_STANDARD, "ntp3.jst.mfeed.")
+    assert m3["status"] == "outlyer"
+    assert m3["reach_dec"] == 255
+    assert m3["delay"] == 15.100
+    assert m3["offset"] == 1.200
+    assert m3["jitter"] == 0.100
+

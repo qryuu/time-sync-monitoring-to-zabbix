@@ -23,9 +23,9 @@ Comprehensive observability for **Chrony**, **NTP (ntpd)**, and **remote NTP app
 1. **Master Items Architecture (8x Load Reduction)**:
    - Queries `chronyc` or `ntpq` once per polling cycle as a master item.
    - Drastically cuts process forking and network overhead while guaranteeing strict atomic time correlation across all extracted metrics.
-2. **LLD (Low-Level Discovery) for All Synchronized Sources**:
-   - Automatically discovers all configured upstream peers (masters, backups, and pools).
-   - Tracks per-peer reachability, round-trip delay, and offset to catch silent upstream network failures before failover occurs.
+2. **LLD (Low-Level Discovery) for All Synchronized Sources (Chrony & NTP)**:
+   - Automatically discovers all configured upstream peers (active master, standbys, candidates, outlyers, and falsetickers).
+   - Tracks per-peer reachability (0-255), delay, offset, jitter, and sync role status to catch silent upstream network failures before failover occurs.
 3. **Grafana-Inspired Modern SVG Aggregate Dashboards**:
    - Built with native Zabbix 7.0 `type: svggraph` and single-value stat cards (`type: item`).
    - Displays client system offset trends with translucent gradient area fills and overlays delay comparisons across all peers in one clean view.
