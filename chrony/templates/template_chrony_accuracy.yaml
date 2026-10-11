@@ -2,402 +2,329 @@ zabbix_export:
   version: '7.0'
   date: '2021-11-21T21:39:42Z'
   template_groups:
-    -
-      uuid: e5be8e009c61477ca38b16ae08352a19
-      name: Templates/Applications
+  - uuid: e5be8e009c61477ca38b16ae08352a19
+    name: Templates/Applications
   templates:
-    -
-      uuid: de2422c2cc1c4b91804570548a4f3e81
-      template: template_chrony_accuracy
-      name: chronyテンプレート
-      description: |
-        ## Overview
-        
-        chrony accuracy Template Englishの日本語版です  
-        英語版は[こちら](cat-app/ntp/chrony-accuracy-template-english)
-        
-        
-        English version of the template is in the [link](cat-app/ntp/chrony-accuracy-template-english) .
-        
-        
-         
-        
-        
-        テンプレートを利用する場合zabbix\_agentd.confでリモートコマンドを有効にしてください。
-        
-        
-        EnableRemoteCommands=1  
-        AllowKey=system.run[*]  # For Zabbix Agent 5.0+
-        UnsafeUserParameters=1
-        
-        
-        ZabbixAgentがインストールされた環境に対しては  
-        chrony テンプレートが使用できます。
-        
-        
-         
-        
-        
-         
-        
-        
-        
-        
-      template_groups:
-        -
-          name: Templates/Applications
-      items:
-        -
-          uuid: ea13fc3c867c403395f31620546d2702
-          name: NTPオフセット
-          type: DEPENDENT
-          key: Lastoffset
-          delay: '0'
-          value_type: FLOAT
-          units: ms
-          description: NTPサーバとの時刻ズレ
-          preprocessing:
-            -
-              type: REGEX
-              parameters:
-                - 'Last offset     : (.*)'
-                - \1
-            -
-              type: RTRIM
-              parameters:
-                - seconds
-            -
-              type: MULTIPLIER
-              parameters:
-                - '1000'
-          master_item:
-            key: 'system.run[chronyc tracking]'
-          tags:
-            -
-              tag: Application
-              value: chrony
-          triggers:
-            -
-              uuid: c02f379b59934e0b84e7f3ffa3229894
-              expression: |
-                last(/template_chrony_accuracy/Lastoffset)>{$NTP_OFFSET_LARGE} or 
-                last(/template_chrony_accuracy/Lastoffset)<-{$NTP_OFFSET_LARGE}
-              name: '上位NTPとのずれが{$NTP_OFFSET_LARGE}msを超えました'
-              priority: WARNING
-            -
-              uuid: 141babfa4ebe4534a7c9160257af8084
-              expression: |
-                last(/template_chrony_accuracy/Lastoffset)>{$NTP_OFFSET_SMALL} or 
-                last(/template_chrony_accuracy/Lastoffset)<-{$NTP_OFFSET_SMALL}
-              name: '上位NTPとのずれが{$NTP_OFFSET_SMALL}msを超えました'
-              priority: INFO
-              dependencies:
-                -
-                  name: '上位NTPとのずれが{$NTP_OFFSET_LARGE}msを超えました'
-                  expression: |
-                    last(/template_chrony_accuracy/Lastoffset)>{$NTP_OFFSET_LARGE} or 
-                    last(/template_chrony_accuracy/Lastoffset)<-{$NTP_OFFSET_LARGE}
-        -
-          uuid: fdccce2395204f3dbd8f87830e5f549c
-          name: 同期状態
-          type: DEPENDENT
-          key: LeapStatus
-          delay: '0'
-          trends: '0'
-          value_type: CHAR
-          description: |
-            同期状態
-            Normal 正常
-            Insert second 挿入
-            Delete second 削除
-            Not synchronized 同期していない
-          preprocessing:
-            -
-              type: REGEX
-              parameters:
-                - 'Leap status     :(.*)'
-                - \1
-          master_item:
-            key: 'system.run[chronyc tracking]'
-          tags:
-            -
-              tag: Application
-              value: chrony
-          triggers:
-            -
-              uuid: ea9e9045dca34aab9c91fe4772c13931
-              expression: 'find(/template_chrony_accuracy/LeapStatus,,"regexp","Not synchronized")<>0'
-              name: NTPサーバーと同期していません。
-              priority: WARNING
-              type: MULTIPLE
-        -
-          uuid: f6be3329da674ac296b9cf951422c1be
-          name: NTP同期サーバ
-          type: DEPENDENT
-          key: Reference
-          delay: '0'
-          trends: '0'
-          value_type: CHAR
-          preprocessing:
-            -
-              type: REGEX
-              parameters:
-                - 'Reference ID    : (.*)'
-                - \1
-            -
-              type: LTRIM
-              parameters:
-                - 'Reference ID    : '
-          master_item:
-            key: 'system.run[chronyc tracking]'
-          tags:
-            -
-              tag: Application
-              value: chrony
-        -
-          uuid: a9886f17c7744bb9ba319c28c77bddb3
-          name: NTPオフセット(長期平均)
-          type: DEPENDENT
-          key: RMSoffset
-          delay: '0'
-          value_type: FLOAT
-          units: ms
-          description: NTPサーバとの時刻ズレ
-          preprocessing:
-            -
-              type: REGEX
-              parameters:
-                - 'RMS offset      :(.*)'
-                - \1
-            -
-              type: RTRIM
-              parameters:
-                - seconds
-            -
-              type: MULTIPLIER
-              parameters:
-                - '1000'
-          master_item:
-            key: 'system.run[chronyc tracking]'
-          tags:
-            -
-              tag: Application
-              value: chrony
-        -
-          uuid: 7dcef5d806c7485fa24cfc62c9b35703
-          name: ネットワーク合計遅延
-          type: DEPENDENT
-          key: Rootdelay
-          delay: '0'
-          value_type: FLOAT
-          units: ms
-          description: 'stratum-1 までのネットワーク合計遅延です。'
-          preprocessing:
-            -
-              type: REGEX
-              parameters:
-                - 'Root delay      :(.*)'
-                - \1
-            -
-              type: RTRIM
-              parameters:
-                - seconds
-            -
-              type: MULTIPLIER
-              parameters:
-                - '1000'
-          master_item:
-            key: 'system.run[chronyc tracking]'
-          tags:
-            -
-              tag: Application
-              value: chrony
-        -
-          uuid: 0aba5928895e4add99178c13f50a1657
-          name: NTP階層
-          type: DEPENDENT
-          key: Stratum
-          delay: '0'
-          description: 監視対象サーバーのstratum階層
-          preprocessing:
-            -
-              type: REGEX
-              parameters:
-                - 'Stratum         : (.*)'
-                - \1
-          master_item:
-            key: 'system.run[chronyc tracking]'
-          tags:
-            -
-              tag: Application
-              value: chrony
-        -
-          uuid: fdd58fd68f864b59a8f9d5aaa3340d77
-          name: chronyバージョン
-          type: ZABBIX_ACTIVE
-          key: 'system.run[chronyc -v]'
-          delay: 1h
-          trends: '0'
-          value_type: CHAR
-          request_method: POST
-          tags:
-            -
-              tag: Application
-              value: chrony
-        -
-          uuid: 3fdb500bd080440eb9dbdd832889a536
-          name: 'chronyc sources'
-          type: ZABBIX_ACTIVE
-          key: 'system.run[chronyc sources]'
-          delay: 10m
-          history: 60d
-          trends: '0'
-          value_type: TEXT
-          request_method: POST
-          tags:
-            -
-              tag: Application
-              value: chrony
-        -
-          uuid: 37266af48ce04ae0a614a24fd4321a4d
-          name: chronyReach
-          type: ZABBIX_ACTIVE
-          key: 'system.run[chronyc sources|grep \* |awk ''{print$5}'']'
-          delay: 10m
-          description: 過去8回の問合せ成功回数を8ビットで表現します。
-          preprocessing:
-            -
-              type: OCTAL_TO_DECIMAL
-              parameters:
-                - ''
-          request_method: POST
-          tags:
-            -
-              tag: Application
-              value: chrony
-        -
-          uuid: 2f7f73996c6b421cb4d40aa7681ffb6b
-          name: 'chronyc tracking'
-          type: ZABBIX_ACTIVE
-          key: 'system.run[chronyc tracking]'
-          delay: 10m
-          history: 60d
-          trends: '0'
-          value_type: TEXT
-          request_method: POST
-          tags:
-            -
-              tag: Application
-              value: chrony
-        -
-          uuid: 804f6dcc64834c56b75e931e5c928af9
-          name: NTP時刻差(方向)
-          type: DEPENDENT
-          key: Systemtime
-          delay: '0'
-          trends: '0'
-          value_type: CHAR
-          description: NTP時刻とsystem時刻との差の方向を示します。
-          preprocessing:
-            -
-              type: REGEX
-              parameters:
-                - 'System time     : (.*)'
-                - \1
-            -
-              type: REGEX
-              parameters:
-                - (fast|slow)
-                - \0
-          master_item:
-            key: 'system.run[chronyc tracking]'
-          tags:
-            -
-              tag: Application
-              value: chrony
-        -
-          uuid: e91b18571db647dda2fd2d809765c398
-          name: NTP時刻差(ms)
-          type: DEPENDENT
-          key: Systemtime_ms
-          delay: '0'
-          value_type: FLOAT
-          units: ms
-          description: NTP時刻とsystem時刻との差を示します。
-          preprocessing:
-            -
-              type: REGEX
-              parameters:
-                - 'System time     :(.*)'
-                - \1
-            -
-              type: RTRIM
-              parameters:
-                - 'seconds {fast|slow} of NTP time'
-            -
-              type: MULTIPLIER
-              parameters:
-                - '1000'
-          master_item:
-            key: 'system.run[chronyc tracking]'
-          tags:
-            -
-              tag: Application
-              value: chrony
-        -
-          uuid: bdcf88649fe44836b0714572d3f37b07
-          name: NTPポーリング間隔
-          type: DEPENDENT
-          key: Updateinterval
-          delay: '0'
-          value_type: FLOAT
-          units: s
-          description: NTPサーバとの同期間隔を示します。
-          preprocessing:
-            -
-              type: REGEX
-              parameters:
-                - 'Update interval :(.*)'
-                - \1
-            -
-              type: RTRIM
-              parameters:
-                - seconds
-          master_item:
-            key: 'system.run[chronyc tracking]'
-          tags:
-            -
-              tag: Application
-              value: chrony
-      macros:
-        -
-          macro: '{$NTP_OFFSET}'
-          value: '50'
-        -
-          macro: '{$NTP_OFFSET_LARGE}'
-          value: '5000'
+  - uuid: de2422c2cc1c4b91804570548a4f3e81
+    template: template_chrony_accuracy
+    name: chronyテンプレート
+    description: "## Overview\n\nchrony accuracy Template Englishの日本語版です  \n英語版は[こちら](cat-app/ntp/chrony-accuracy-template-english)\n\n\nEnglish version of the template is in the [link](cat-app/ntp/chrony-accuracy-template-english) .\n\n\n \n\n\nテンプレートを利用する場合zabbix\\_agentd.confでリモートコマンドを有効にしてください。\n\n\nEnableRemoteCommands=1  \nAllowKey=system.run[*]  # For Zabbix Agent 5.0+\nUnsafeUserParameters=1\n\n\nZabbixAgentがインストールされた環境に対しては  \nchrony テンプレートが使用できます。\n\n\n \n\n\n \n"
+    template_groups:
+    - name: Templates/Applications
+    items:
+    - uuid: ea13fc3c867c403395f31620546d2702
+      name: NTPオフセット
+      type: DEPENDENT
+      key: Lastoffset
+      delay: '0'
+      value_type: FLOAT
+      units: ms
+      description: NTPサーバとの時刻ズレ
+      preprocessing:
+      - type: CSV_TO_JSON
+        parameters:
+        - ','
+        - '"'
+        - '0'
+      - type: JSONPATH
+        parameters:
+        - $[0][4]
+      - type: MULTIPLIER
+        parameters:
+        - '1000'
+      master_item:
+        key: system.run[chronyc -c tracking]
+      tags:
+      - tag: Application
+        value: chrony
+      triggers:
+      - uuid: c02f379b59934e0b84e7f3ffa3229894
+        expression: "last(/template_chrony_accuracy/Lastoffset)>{$NTP_OFFSET_LARGE} or \nlast(/template_chrony_accuracy/Lastoffset)<-{$NTP_OFFSET_LARGE}\n"
+        name: 上位NTPとのずれが{$NTP_OFFSET_LARGE}msを超えました
+        priority: WARNING
+      - uuid: 141babfa4ebe4534a7c9160257af8084
+        expression: "last(/template_chrony_accuracy/Lastoffset)>{$NTP_OFFSET_SMALL} or \nlast(/template_chrony_accuracy/Lastoffset)<-{$NTP_OFFSET_SMALL}\n"
+        name: 上位NTPとのずれが{$NTP_OFFSET_SMALL}msを超えました
+        priority: INFO
+        dependencies:
+        - name: 上位NTPとのずれが{$NTP_OFFSET_LARGE}msを超えました
+          expression: "last(/template_chrony_accuracy/Lastoffset)>{$NTP_OFFSET_LARGE} or \nlast(/template_chrony_accuracy/Lastoffset)<-{$NTP_OFFSET_LARGE}\n"
+    - uuid: fdccce2395204f3dbd8f87830e5f549c
+      name: 同期状態
+      type: DEPENDENT
+      key: LeapStatus
+      delay: '0'
+      trends: '0'
+      value_type: CHAR
+      description: '同期状態
+
+        Normal 正常
+
+        Insert second 挿入
+
+        Delete second 削除
+
+        Not synchronized 同期していない
+
+        '
+      preprocessing:
+      - type: CSV_TO_JSON
+        parameters:
+        - ','
+        - '"'
+        - '0'
+      - type: JSONPATH
+        parameters:
+        - $[0][12]
+      master_item:
+        key: system.run[chronyc -c tracking]
+      tags:
+      - tag: Application
+        value: chrony
+      triggers:
+      - uuid: ea9e9045dca34aab9c91fe4772c13931
+        expression: find(/template_chrony_accuracy/LeapStatus,,"regexp","Not synchronized")<>0
+        name: NTPサーバーと同期していません。
+        priority: WARNING
+        type: MULTIPLE
+    - uuid: f6be3329da674ac296b9cf951422c1be
+      name: NTP同期サーバ
+      type: DEPENDENT
+      key: Reference
+      delay: '0'
+      trends: '0'
+      value_type: CHAR
+      preprocessing:
+      - type: CSV_TO_JSON
+        parameters:
+        - ','
+        - '"'
+        - '0'
+      - type: JSONPATH
+        parameters:
+        - $[0][0]
+      master_item:
+        key: system.run[chronyc -c tracking]
+      tags:
+      - tag: Application
+        value: chrony
+    - uuid: a9886f17c7744bb9ba319c28c77bddb3
+      name: NTPオフセット(長期平均)
+      type: DEPENDENT
+      key: RMSoffset
+      delay: '0'
+      value_type: FLOAT
+      units: ms
+      description: NTPサーバとの時刻ズレ
+      preprocessing:
+      - type: CSV_TO_JSON
+        parameters:
+        - ','
+        - '"'
+        - '0'
+      - type: JSONPATH
+        parameters:
+        - $[0][5]
+      - type: MULTIPLIER
+        parameters:
+        - '1000'
+      master_item:
+        key: system.run[chronyc -c tracking]
+      tags:
+      - tag: Application
+        value: chrony
+    - uuid: 7dcef5d806c7485fa24cfc62c9b35703
+      name: ネットワーク合計遅延
+      type: DEPENDENT
+      key: Rootdelay
+      delay: '0'
+      value_type: FLOAT
+      units: ms
+      description: stratum-1 までのネットワーク合計遅延です。
+      preprocessing:
+      - type: CSV_TO_JSON
+        parameters:
+        - ','
+        - '"'
+        - '0'
+      - type: JSONPATH
+        parameters:
+        - $[0][9]
+      - type: MULTIPLIER
+        parameters:
+        - '1000'
+      master_item:
+        key: system.run[chronyc -c tracking]
+      tags:
+      - tag: Application
+        value: chrony
+    - uuid: 0aba5928895e4add99178c13f50a1657
+      name: NTP階層
+      type: DEPENDENT
+      key: Stratum
+      delay: '0'
+      description: 監視対象サーバーのstratum階層
+      preprocessing:
+      - type: CSV_TO_JSON
+        parameters:
+        - ','
+        - '"'
+        - '0'
+      - type: JSONPATH
+        parameters:
+        - $[0][1]
+      master_item:
+        key: system.run[chronyc -c tracking]
+      tags:
+      - tag: Application
+        value: chrony
+    - uuid: fdd58fd68f864b59a8f9d5aaa3340d77
+      name: chronyバージョン
+      type: ZABBIX_ACTIVE
+      key: system.run[chronyc -v]
+      delay: 1h
+      trends: '0'
+      value_type: CHAR
+      request_method: POST
+      tags:
+      - tag: Application
+        value: chrony
+    - uuid: 3fdb500bd080440eb9dbdd832889a536
+      name: chronyc sources
+      type: ZABBIX_ACTIVE
+      key: system.run[chronyc sources]
+      delay: 10m
+      history: 60d
+      trends: '0'
+      value_type: TEXT
+      request_method: POST
+      tags:
+      - tag: Application
+        value: chrony
+    - uuid: 37266af48ce04ae0a614a24fd4321a4d
+      name: chronyReach
+      type: ZABBIX_ACTIVE
+      key: system.run[chronyc sources|grep \* |awk '{print$5}']
+      delay: 10m
+      description: 過去8回の問合せ成功回数を8ビットで表現します。
+      preprocessing:
+      - type: OCTAL_TO_DECIMAL
+        parameters:
+        - ''
+      request_method: POST
+      tags:
+      - tag: Application
+        value: chrony
+    - uuid: 2f7f73996c6b421cb4d40aa7681ffb6b
+      name: chronyc tracking
+      type: ZABBIX_ACTIVE
+      key: system.run[chronyc -c tracking]
+      delay: 10m
+      history: 60d
+      trends: '0'
+      value_type: TEXT
+      request_method: POST
+      tags:
+      - tag: Application
+        value: chrony
+    - uuid: 804f6dcc64834c56b75e931e5c928af9
+      name: NTP時刻差(方向)
+      type: DEPENDENT
+      key: Systemtime
+      delay: '0'
+      trends: '0'
+      value_type: CHAR
+      description: NTP時刻とsystem時刻との差の方向を示します。
+      preprocessing:
+      - type: CSV_TO_JSON
+        parameters:
+        - ','
+        - '"'
+        - '0'
+      - type: JSONPATH
+        parameters:
+        - $[0][3]
+      - type: JAVASCRIPT
+        parameters:
+        - 'return Number(value) >= 0 ? ''fast'' : ''slow'';'
+      master_item:
+        key: system.run[chronyc -c tracking]
+      tags:
+      - tag: Application
+        value: chrony
+    - uuid: e91b18571db647dda2fd2d809765c398
+      name: NTP時刻差(ms)
+      type: DEPENDENT
+      key: Systemtime_ms
+      delay: '0'
+      value_type: FLOAT
+      units: ms
+      description: NTP時刻とsystem時刻との差を示します。
+      preprocessing:
+      - type: CSV_TO_JSON
+        parameters:
+        - ','
+        - '"'
+        - '0'
+      - type: JSONPATH
+        parameters:
+        - $[0][3]
+      - type: MULTIPLIER
+        parameters:
+        - '1000'
+      master_item:
+        key: system.run[chronyc -c tracking]
+      tags:
+      - tag: Application
+        value: chrony
+    - uuid: bdcf88649fe44836b0714572d3f37b07
+      name: NTPポーリング間隔
+      type: DEPENDENT
+      key: Updateinterval
+      delay: '0'
+      value_type: FLOAT
+      units: s
+      description: NTPサーバとの同期間隔を示します。
+      preprocessing:
+      - type: CSV_TO_JSON
+        parameters:
+        - ','
+        - '"'
+        - '0'
+      - type: JSONPATH
+        parameters:
+        - $[0][11]
+      master_item:
+        key: system.run[chronyc -c tracking]
+      tags:
+      - tag: Application
+        value: chrony
+    macros:
+    - macro: '{$NTP_OFFSET}'
+      value: '50'
+    - macro: '{$NTP_OFFSET_LARGE}'
+      value: '5000'
+    - macro: '{$NTP_OFFSET_SMALL}'
+      value: '5'
+      description: 許容オフセット微小閾値（ms）
   graphs:
-    -
-      uuid: f3a3fa2555794a3caa0fd79f32fe8621
-      name: 'chrony NTP精度情報'
-      graph_items:
-        -
-          drawtype: BOLD_LINE
-          color: 1A7C11
-          item:
-            host: template_chrony_accuracy
-            key: Lastoffset
-        -
-          sortorder: '1'
-          drawtype: BOLD_LINE
-          color: F63100
-          item:
-            host: template_chrony_accuracy
-            key: RMSoffset
-        -
-          sortorder: '2'
-          drawtype: BOLD_LINE
-          color: 2774A4
-          item:
-            host: template_chrony_accuracy
-            key: Systemtime_ms
+  - uuid: f3a3fa2555794a3caa0fd79f32fe8621
+    name: chrony NTP精度情報
+    graph_items:
+    - drawtype: BOLD_LINE
+      color: 1A7C11
+      item:
+        host: template_chrony_accuracy
+        key: Lastoffset
+    - sortorder: '1'
+      drawtype: BOLD_LINE
+      color: F63100
+      item:
+        host: template_chrony_accuracy
+        key: RMSoffset
+    - sortorder: '2'
+      drawtype: BOLD_LINE
+      color: 2774A4
+      item:
+        host: template_chrony_accuracy
+        key: Systemtime_ms
