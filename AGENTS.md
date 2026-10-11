@@ -31,6 +31,15 @@ This document defines the autonomous operational guidelines, diagnostic wizard, 
 - Always offer or select both `_ja.yaml` (Japanese) and `_en.yaml` (English).
 - Import scripts (`import_template.ps1` and `import_template.py`) must inspect the OS locale (`Get-Culture` / `$LANG`) when `-Language Auto` is passed.
 
+### Rule 6: Existing Template Handling & Safe Upgrade Protocol
+- **Pre-Import Query (`template.get`)**: Before calling `configuration.import`, check whether `template_ntp_accuracy` or `template_chrony_accuracy` already exists.
+- **Historical Data Preservation**:
+  - Always use `updateExisting: true` without `deleteMissing: true` so that existing item history/trends are strictly preserved.
+  - If existing templates are linked to production hosts, notify the user with linked host counts before major schema updates.
+- **Legacy Version Coexistence**:
+  - Legacy templates (`chrony_Monitoring-Japanese`, `NTP_Monitoring-Japanese`) use different technical names and will safely coexist without collision.
+  - When legacy templates are detected on target hosts, assist the user in adding the new template and safely unlinking (without clearing history) the legacy template.
+
 ---
 
 ## 2. Interactive Setup & Diagnostics Wizard

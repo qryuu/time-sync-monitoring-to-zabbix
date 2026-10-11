@@ -86,7 +86,35 @@ function Invoke-ZabbixApi {
     return $response.result
 }
 
-# 4. Import Configuration (using strict Zabbix 7.0 camelCase templateDashboards)
+# 4. Check for existing or legacy templates
+Write-Host "[INFO] Checking existing templates on Zabbix Server..." -ForegroundColor Cyan
+try {
+    $existingTmpl = Invoke-ZabbixApi -Method "template.get" -Params @{
+        filter = @{ host = @($TemplateTechName) }
+        selectHosts = @("hostid", "host")
+    }
+    if ($existingTmpl -and $existingTmpl.Count -gt 0) {
+        $linkedCount = if ($existingTmpl[0].hosts) { $existingTmpl[0].hosts.Count } else { 0 }
+        Write-Host "[INFO] Existing template '$TemplateTechName' found (currently linked to $linkedCount host(s)). Updating safely with historical data preserved..." -ForegroundColor Yellow
+    }
+
+    # Also check for legacy template names
+    $legacyNames = @("chrony_Monitoring-Japanese", "NTP_Monitoring-Japanese", "NTP-remote-Japanese")
+    $legacyTmpl = Invoke-ZabbixApi -Method "template.get" -Params @{
+        filter = @{ host = $legacyNames }
+        selectHosts = @("hostid", "host")
+    }
+    if ($legacyTmpl -and $legacyTmpl.Count -gt 0) {
+        foreach ($lt in $legacyTmpl) {
+            $lCount = if ($lt.hosts) { $lt.hosts.Count } else { 0 }
+            Write-Host "[NOTICE] Legacy template '$($lt.host)' detected ($lCount linked host(s)). It will safely coexist without interference. Consider re-linking hosts to '$TemplateTechName'." -ForegroundColor Cyan
+        }
+    }
+} catch {
+    Write-Host "[WARN] Pre-import template check skipped: $_" -ForegroundColor DarkGray
+}
+
+# 5. Import Configuration (using strict Zabbix 7.0 camelCase templateDashboards)
 Write-Host "[INFO] Importing template: $(Split-Path -Leaf $TemplateFile)..." -ForegroundColor Cyan
 $importRules = @{
     template_groups    = @{ createMissing = $true; updateExisting = $true }

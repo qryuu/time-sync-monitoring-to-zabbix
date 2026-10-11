@@ -69,7 +69,29 @@ def main():
     template_content = tmpl_file.read_text(encoding="utf-8")
     tech_name = f"template_{args.type}_accuracy"
 
-    # 3. Call configuration.import (Strict Zabbix 7.0 camelCase templateDashboards)
+    # 3. Check for existing or legacy templates
+    try:
+        existing_tmpls = call_zabbix_api(args.url, args.token, "template.get", {
+            "filter": {"host": [tech_name]},
+            "selectHosts": ["hostid", "host"]
+        })
+        if existing_tmpls:
+            linked_count = len(existing_tmpls[0].get("hosts", []))
+            print(f"[INFO] Existing template '{tech_name}' found ({linked_count} linked hosts). Updating safely with historical data preserved...")
+
+        legacy_names = ["chrony_Monitoring-Japanese", "NTP_Monitoring-Japanese", "NTP-remote-Japanese"]
+        legacy_tmpls = call_zabbix_api(args.url, args.token, "template.get", {
+            "filter": {"host": legacy_names},
+            "selectHosts": ["hostid", "host"]
+        })
+        if legacy_tmpls:
+            for lt in legacy_tmpls:
+                l_count = len(lt.get("hosts", []))
+                print(f"[NOTICE] Legacy template '{lt['host']}' detected ({l_count} linked hosts). Safe coexistence ensured. Consider migrating hosts to '{tech_name}'.")
+    except Exception as e:
+        print(f"[WARN] Pre-import template check skipped: {e}")
+
+    # 4. Call configuration.import (Strict Zabbix 7.0 camelCase templateDashboards)
     rules = {
         "template_groups": {"createMissing": True, "updateExisting": True},
         "templates": {"createMissing": True, "updateExisting": True},
